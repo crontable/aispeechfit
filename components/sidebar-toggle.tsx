@@ -3,7 +3,7 @@
 import * as React from 'react';
 import { Menu } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { useSidebar } from '@/components/sidebar-provider';
+import { useSidebar } from '@/components/sidebar/sidebar-provider';
 
 export function SidebarToggle() {
   const { toggleSidebar } = useSidebar();

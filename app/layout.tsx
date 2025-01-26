@@ -7,8 +7,8 @@ import { Geist } from 'next/font/google';
 import { ThemeProvider } from 'next-themes';
 import Link from 'next/link';
 import './globals.css';
-import { SidebarProvider } from '@/components/sidebar-provider';
-import { Sidebar } from '@/components/sidebar';
+import { SidebarProvider } from '@/components/sidebar/sidebar-provider';
+import { Sidebar } from '@/components/sidebar/sidebar';
 import { SidebarToggle } from '@/components/sidebar-toggle';
 
 const defaultUrl = process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000';
