@@ -4,14 +4,14 @@ import { Message } from '@/components/form-message';
 import { Button } from '@/components/ui/button';
 import { createClient } from '@/utils/supabase/client';
 
-export default function Login(props: { searchParams: Message }) {
-  const searchParams = props.searchParams;
+export default function Login() {
   const supabase = createClient();
 
   async function signInWithKakao() {
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider: 'kakao',
     });
+    console.log('kakao', data, error);
   }
 
   return (
