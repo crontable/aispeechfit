@@ -43,7 +43,7 @@ export default function RootLayout({
                     <ThemeSwitcher />
                   </div>
                   {/* <ChatArea /> */}
-                  본문
+                  {children}
                 </div>
               </main>
             </div>
