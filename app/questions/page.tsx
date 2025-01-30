@@ -20,6 +20,24 @@ export interface BookDTO {
   chapters: ChapterDTO[]; // Book 내에 여러 챕터를 중첩
 }
 
+/* SQL
+
+  SELECT
+      b.id AS book_id,
+      b.title AS book_title,
+      b.pub_year,
+      b.created_at AS book_created_at,
+      b.updated_at AS book_updated_at,
+      c.id AS chapter_id,
+      c.chapter_title,
+      c.sort_order,
+      c.created_at AS chapter_created_at,
+      c.updated_at AS chapter_updated_at
+  FROM books b
+  LEFT JOIN chapters c ON b.id = c.book_id
+  ORDER BY b.id, c.sort_order;
+ */
+
 // 2) 실제 페이지 컴포넌트
 export default async function Sidebar() {
   const supabase = await createClient();
