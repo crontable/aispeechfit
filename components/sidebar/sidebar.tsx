@@ -5,15 +5,16 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/
 import { Book, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useSidebar } from '@/components/sidebar/sidebar-provider';
-interface SidebarItem {
-  id: string;
+import { useAtom } from 'jotai';
+import { booksAtom } from '@/atoms/books';
+export interface SidebarItem {
+  id: number;
   title: string;
   icon?: React.ReactNode;
-  href?: string;
   children?: {
-    id: string;
+    id: number;
     title: string;
-    href: string;
+    href?: string;
   }[];
 }
 
@@ -24,7 +25,7 @@ interface Props {
 
 const title = '...';
 
-export function Sidebar() {
+export function Sidebar({ items, title }: Props) {
   const { isOpen, toggleSidebar } = useSidebar();
 
   return (
@@ -43,36 +44,27 @@ export function Sidebar() {
       </div>
 
       <Accordion type="multiple" className="w-full">
-        <AccordionItem value="item-1">
-          <AccordionTrigger className="px-4">
-            <div className="flex items-center">
-              <Book className="mr-2 h-4 w-4" />
-              <span>Project 1</span>
-            </div>
-          </AccordionTrigger>
-          <AccordionContent>
-            <ul className="px-4 py-2">
-              <li>Item 1</li>
-              <li>Item 2</li>
-              <li>Item 3</li>
-            </ul>
-          </AccordionContent>
-        </AccordionItem>
-        <AccordionItem value="item-2">
-          <AccordionTrigger className="px-4">
-            <div className="flex items-center">
-              <Book className="mr-2 h-4 w-4" />
-              <span>Project 2</span>
-            </div>
-          </AccordionTrigger>
-          <AccordionContent>
-            <ul className="px-4 py-2">
-              <li>Item 1</li>
-              <li>Item 2</li>
-              <li>Item 3</li>
-            </ul>
-          </AccordionContent>
-        </AccordionItem>
+        {items.map((item) => (
+          <AccordionItem value={item.id.toString()} key={item.id}>
+            <AccordionTrigger className="px-4">
+              <div className="flex items-center">
+                {item.icon}
+                <span>{item.title}</span>
+              </div>
+            </AccordionTrigger>
+            <AccordionContent>
+              <ul className="px-4 py-2">
+                {item.children?.map((child) => (
+                  <li key={child.id}>
+                    {child.title}
+                    <br />
+                    {child.href}
+                  </li>
+                ))}
+              </ul>
+            </AccordionContent>
+          </AccordionItem>
+        ))}
       </Accordion>
     </div>
   );
