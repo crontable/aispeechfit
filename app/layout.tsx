@@ -1,17 +1,12 @@
-import DeployButton from '@/components/deploy-button';
-import { EnvVarWarning } from '@/components/env-var-warning';
-import HeaderAuth from '@/components/header-auth';
 import { ThemeSwitcher } from '@/components/theme-switcher';
-import { hasEnvVars } from '@/utils/supabase/check-env-vars';
 import { Geist } from 'next/font/google';
 import { ThemeProvider } from 'next-themes';
-import Link from 'next/link';
 import './globals.css';
 import { SidebarProvider } from '@/components/sidebar/sidebar-provider';
 import { Sidebar } from '@/components/sidebar/sidebar';
-import { SidebarToggle } from '@/components/sidebar-toggle';
 import { Book, BookDTO, ChapterDTO } from '@/domain/types';
 import { createClient } from '@/utils/supabase/server';
+import { convertBooks } from '@/lib/converter';
 
 const defaultUrl = process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000';
 
@@ -31,7 +26,6 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  ///////////
   const supabase = await createClient();
 
   // 2-1) Books 테이블 raw data 조회
@@ -58,35 +52,7 @@ export default async function RootLayout({
     return <div>Loading...</div>;
   }
 
-  const generateBooks = ({ bookDTOs, chapterDTOs }: { bookDTOs: BookDTO[]; chapterDTOs: ChapterDTO[] }): Book[] => {
-    return bookDTOs.map(({ id, title, pub_year, created_at, updated_at }) => {
-      const chapters =
-        chapterDTOs
-          ?.filter((chapterDTO) => chapterDTO.book_id === id)
-          .map((chapterDTO) => {
-            return {
-              id: chapterDTO.id,
-              bookId: id,
-              title: chapterDTO.title,
-              sortOrder: chapterDTO.sort_order,
-              createdAt: chapterDTO.created_at,
-              updatedAt: chapterDTO.updated_at,
-            };
-          }) || [];
-
-      return {
-        id,
-        title,
-        publishedYear: pub_year,
-        createdAt: created_at,
-        updatedAt: updated_at,
-        chapters,
-      };
-    });
-  };
-
-  const books = generateBooks({ bookDTOs, chapterDTOs });
-  console.log(books, 'books');
+  const books = convertBooks({ bookDTOs, chapterDTOs });
 
   return (
     <html lang="en" className={geistSans.className} suppressHydrationWarning>
