@@ -5,6 +5,24 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/
 import { Book, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useSidebar } from '@/components/sidebar/sidebar-provider';
+interface SidebarItem {
+  id: string;
+  title: string;
+  icon?: React.ReactNode;
+  href?: string;
+  children?: {
+    id: string;
+    title: string;
+    href: string;
+  }[];
+}
+
+interface Props {
+  title?: string;
+  items: SidebarItem[];
+}
+
+const title = '...';
 
 export function Sidebar() {
   const { isOpen, toggleSidebar } = useSidebar();
@@ -18,11 +36,12 @@ export function Sidebar() {
     `}
     >
       <div className="flex justify-between items-center p-4 border-b md:hidden">
-        <h2 className="font-semibold">Menu</h2>
+        <h2 className="font-semibold">{title}</h2>
         <Button variant="ghost" size="icon" onClick={toggleSidebar}>
           <X className="h-4 w-4" />
         </Button>
       </div>
+
       <Accordion type="multiple" className="w-full">
         <AccordionItem value="item-1">
           <AccordionTrigger className="px-4">

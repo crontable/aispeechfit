@@ -10,6 +10,8 @@ import './globals.css';
 import { SidebarProvider } from '@/components/sidebar/sidebar-provider';
 import { Sidebar } from '@/components/sidebar/sidebar';
 import { SidebarToggle } from '@/components/sidebar-toggle';
+import { Book, BookDTO, ChapterDTO } from '@/domain/types';
+import { createClient } from '@/utils/supabase/server';
 
 const defaultUrl = process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000';
 
@@ -24,11 +26,68 @@ const geistSans = Geist({
   subsets: ['latin'],
 });
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  ///////////
+  const supabase = await createClient();
+
+  // 2-1) Books 테이블 raw data 조회
+  const { data: bookDTOs, error: fetchingBookError } = await supabase
+    .from('books')
+    .select('*')
+    .order('id', { ascending: true });
+
+  // 2-2) Chapters 테이블 raw data 조회
+  const { data: chapterDTOs, error: fetchingChapterError } = await supabase
+    .from('chapters')
+    .select('*')
+    .order('sort_order', { ascending: true });
+
+  // 에러 확인
+  if (fetchingBookError) {
+    console.error('Error fetching books:', fetchingBookError);
+  }
+  if (fetchingChapterError) {
+    console.error('Error fetching chapters:', fetchingChapterError);
+  }
+
+  if (!bookDTOs || !chapterDTOs) {
+    return <div>Loading...</div>;
+  }
+
+  const generateBooks = ({ bookDTOs, chapterDTOs }: { bookDTOs: BookDTO[]; chapterDTOs: ChapterDTO[] }): Book[] => {
+    return bookDTOs.map(({ id, title, pub_year, created_at, updated_at }) => {
+      const chapters =
+        chapterDTOs
+          ?.filter((chapterDTO) => chapterDTO.book_id === id)
+          .map((chapterDTO) => {
+            return {
+              id: chapterDTO.id,
+              bookId: id,
+              title: chapterDTO.title,
+              sortOrder: chapterDTO.sort_order,
+              createdAt: chapterDTO.created_at,
+              updatedAt: chapterDTO.updated_at,
+            };
+          }) || [];
+
+      return {
+        id,
+        title,
+        publishedYear: pub_year,
+        createdAt: created_at,
+        updatedAt: updated_at,
+        chapters,
+      };
+    });
+  };
+
+  const books = generateBooks({ bookDTOs, chapterDTOs });
+  console.log(books, 'books');
+
   return (
     <html lang="en" className={geistSans.className} suppressHydrationWarning>
       <body className="bg-background text-foreground">
