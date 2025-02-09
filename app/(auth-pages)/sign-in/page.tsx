@@ -21,9 +21,10 @@ export default function Login() {
   }
 
   return (
-    <div>
-      <h1>로그인</h1>
-      <Button onClick={signInWithKakao}>카카오 로그인</Button>
+    <div className="relative w-full max-w-md px-4 pt-4">
+      <Button className="w-full bg-[#FEE500] hover:bg-[#FDD835] text-black" onClick={signInWithKakao}>
+        카카오 로그인
+      </Button>
     </div>
   );
 }
