@@ -34,14 +34,28 @@ export const updateSession = async (request: NextRequest) => {
 
     // This will refresh session if expired - required for Server Components
     // https://supabase.com/docs/guides/auth/server-side/nextjs
-    const user = await supabase.auth.getUser();
+    const authResponse = await supabase.auth.getUser();
+
+    // if (request.nextUrl.pathname === '/' && authResponse?.data?.user === null) {
+    //   console.log('///////////', authResponse);
+    //   return NextResponse.redirect(new URL('/sign-in', request.url));
+    // }
 
     // protected routes
-    if (request.nextUrl.pathname.startsWith(ROUTE_PATH_STUDY) && user.error) {
-      return NextResponse.redirect(new URL('/sign-in', request.url));
+    console.log(
+      '@@@@@@',
+      request.nextUrl.pathname,
+      request.nextUrl.pathname.startsWith(ROUTE_PATH_STUDY),
+      authResponse?.error
+    );
+
+    if (request.nextUrl.pathname.startsWith(ROUTE_PATH_STUDY)) {
+      console.log('로그인 데이터', authResponse.data);
+
+      if (authResponse?.error) return NextResponse.redirect(new URL('/sign-in', request.url));
     }
 
-    if (request.nextUrl.pathname === '/' && !user.error) {
+    if (request.nextUrl.pathname === '/' && !authResponse?.error) {
       return NextResponse.redirect(new URL(ROUTE_PATH_STUDY, request.url));
     }
 
