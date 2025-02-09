@@ -1,5 +1,6 @@
-import { createServerClient } from "@supabase/ssr";
-import { type NextRequest, NextResponse } from "next/server";
+import { ROUTE_PATH_STUDY } from '@/app/routes';
+import { createServerClient } from '@supabase/ssr';
+import { type NextRequest, NextResponse } from 'next/server';
 
 export const updateSession = async (request: NextRequest) => {
   // This `try/catch` block is only here for the interactive tutorial.
@@ -21,31 +22,41 @@ export const updateSession = async (request: NextRequest) => {
             return request.cookies.getAll();
           },
           setAll(cookiesToSet) {
-            cookiesToSet.forEach(({ name, value }) =>
-              request.cookies.set(name, value),
-            );
+            cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value));
             response = NextResponse.next({
               request,
             });
-            cookiesToSet.forEach(({ name, value, options }) =>
-              response.cookies.set(name, value, options),
-            );
+            cookiesToSet.forEach(({ name, value, options }) => response.cookies.set(name, value, options));
           },
         },
-      },
+      }
     );
 
     // This will refresh session if expired - required for Server Components
     // https://supabase.com/docs/guides/auth/server-side/nextjs
-    const user = await supabase.auth.getUser();
+    const authResponse = await supabase.auth.getUser();
+
+    // if (request.nextUrl.pathname === '/' && authResponse?.data?.user === null) {
+    //   console.log('///////////', authResponse);
+    //   return NextResponse.redirect(new URL('/sign-in', request.url));
+    // }
 
     // protected routes
-    if (request.nextUrl.pathname.startsWith("/protected") && user.error) {
-      return NextResponse.redirect(new URL("/sign-in", request.url));
+    console.log(
+      '@@@@@@',
+      request.nextUrl.pathname,
+      request.nextUrl.pathname.startsWith(ROUTE_PATH_STUDY),
+      authResponse?.error
+    );
+
+    if (request.nextUrl.pathname.startsWith(ROUTE_PATH_STUDY)) {
+      console.log('로그인 데이터', authResponse.data);
+
+      if (authResponse?.error) return NextResponse.redirect(new URL('/sign-in', request.url));
     }
 
-    if (request.nextUrl.pathname === "/" && !user.error) {
-      return NextResponse.redirect(new URL("/protected", request.url));
+    if (request.nextUrl.pathname === '/' && !authResponse?.error) {
+      return NextResponse.redirect(new URL(ROUTE_PATH_STUDY, request.url));
     }
 
     return response;

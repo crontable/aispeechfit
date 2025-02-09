@@ -6,7 +6,6 @@ import { createClient } from '@/utils/supabase/server';
 // 1) 우리가 원하는 최종 JSON 구조를 위한 타입 정의
 
 /* SQL
-
   SELECT
       b.id AS book_id,
       b.title AS book_title,
