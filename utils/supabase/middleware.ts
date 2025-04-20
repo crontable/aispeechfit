@@ -36,21 +36,23 @@ export async function updateSession(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (!user && ![ROUTE_PATH.SIGN_IN, ROUTE_PATH.AUTH_CALLBACK].includes) {
-    // 로그인 정보가 없을 경우 로그인 페이지로 넘김
-    const url = request.nextUrl.clone();
-    url.pathname = ROUTE_PATH.SIGN_IN;
-    return NextResponse.redirect(url);
-  }
+  console.log('#####', request.nextUrl.pathname);
+  console.log('\tSUPABASE Middleware 진입 > user:', user);
 
-  // ROOT 접근 시 /study로 리다이렉트
-  if (request.nextUrl.pathname === ROUTE_PATH.ROOT) {
-    return NextResponse.redirect(new URL(ROUTE_PATH.STUDY, request.url));
-  }
-
-  // 로그인 되어 있을 경우 /study로 리다이렉트
-  if (user && request.nextUrl.pathname === ROUTE_PATH.SIGN_IN) {
-    return NextResponse.redirect(new URL(ROUTE_PATH.STUDY, request.url));
+  switch (request.nextUrl.pathname) {
+    case ROUTE_PATH.ROOT: // ROOT 접근 시 /study로 리다이렉트
+      return NextResponse.redirect(new URL(ROUTE_PATH.STUDY, request.url));
+    case ROUTE_PATH.SIGN_IN: // 로그인 되어 있을 경우 /study로 리다이렉트
+      if (user) return NextResponse.redirect(new URL(ROUTE_PATH.STUDY, request.url));
+      break;
+    case ROUTE_PATH.STUDY:
+      if (!user) {
+        // 로그인 정보가 없을 경우 로그인 페이지로 넘김
+        const url = request.nextUrl.clone();
+        url.pathname = ROUTE_PATH.SIGN_IN;
+        return NextResponse.redirect(url);
+      }
+      break;
   }
 
   // IMPORTANT: You *must* return the supabaseResponse object as it is.
