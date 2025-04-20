@@ -13,7 +13,7 @@ export default function Login() {
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider: 'kakao',
       options: {
-        redirectTo: `http://${DEFAULT_BASE_URL}/auth/callback`,
+        redirectTo: `${DEFAULT_BASE_URL}/auth/callback`,
       },
     });
 
