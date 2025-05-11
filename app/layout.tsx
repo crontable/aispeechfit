@@ -1,6 +1,7 @@
 import { Geist } from 'next/font/google';
 import './globals.css';
 import { DEFAULT_BASE_URL } from '@/constant';
+import { Toaster } from 'sonner';
 
 export const metadata = {
   metadataBase: new URL(DEFAULT_BASE_URL),
@@ -20,7 +21,10 @@ export default async function RootLayout({
 }>) {
   return (
     <html lang="en" className={geistSans.className} suppressHydrationWarning>
-      <body className="bg-background text-foreground">{children}</body>
+      <body className="bg-background text-foreground">
+        {children}
+        <Toaster position="top-right" richColors closeButton />
+      </body>
     </html>
   );
 }

@@ -11,6 +11,8 @@ import {
 import { useSidebar } from "@/components/sidebar/sidebar-provider";
 import { ThemeSwitcher } from "../theme-switcher";
 import { SidebarToggle } from "../sidebar-toggle";
+import LogoutButton from "../LogoutButton";
+
 export interface SidebarItem {
   id: number;
   title: string;
@@ -44,7 +46,10 @@ export function Sidebar({ items, title }: Props) {
       <div className="flex justify-between items-center p-4 border-b">
         <SidebarToggle />
         <h2 className="font-semibold">{title}</h2>
-        <ThemeSwitcher />
+        <div className="flex items-center space-x-2">
+          <ThemeSwitcher />
+          <LogoutButton />
+        </div>
       </div>
 
       <Accordion type="multiple" className="w-full">

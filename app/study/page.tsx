@@ -1,9 +1,6 @@
-import LogoutButton from '@/components/LogoutButton';
 import ReversibleCard from '@/components/ReversibleCard';
-import FetchDataSteps from '@/components/tutorial/fetch-data-steps';
-import { convertBooks, convertToReversibleCardQuestions } from '@/lib/converter';
+import { convertToReversibleCardQuestions } from '@/lib/converter';
 import { createClient } from '@/utils/supabase/server';
-import { InfoIcon } from 'lucide-react';
 import { redirect } from 'next/navigation';
 
 const DUMMY_DATA = [
@@ -99,7 +96,6 @@ export default async function ProtectedPage() {
         <h1>구술 카드</h1>
         <ReversibleCard questions={convertedQuestions} />
       </div>
-      <LogoutButton />
     </div>
   );
 }
