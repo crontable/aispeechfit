@@ -38,6 +38,11 @@ export function Sidebar({ items, title }: Props) {
   // 화면 너비 상태 추적
   const [isMobile, setIsMobile] = React.useState(false);
   
+  // 기본적으로 펼칠 아이템 ID 생성
+  const defaultExpandedItems = React.useMemo(() => {
+    return items.map(item => item.id.toString());
+  }, [items]);
+  
   // 화면 크기 변경 감지
   React.useEffect(() => {
     const checkIsMobile = () => {
@@ -78,7 +83,11 @@ export function Sidebar({ items, title }: Props) {
         </div>
       </div>
 
-      <Accordion type="multiple" className="w-full">
+      <Accordion 
+        type="multiple" 
+        className="w-full" 
+        defaultValue={defaultExpandedItems}
+      >
         {items.map((item) => (
           <AccordionItem value={item.id.toString()} key={item.id}>
             <AccordionTrigger className="px-4">
