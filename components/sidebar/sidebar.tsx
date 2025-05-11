@@ -81,7 +81,6 @@ export function Sidebar({ items, title, userData }: Props) {
         <h2 className="font-semibold">{title}</h2>
         <div className="flex items-center space-x-2">
           <ThemeSwitcher />
-          <LogoutButton />
         </div>
       </div>
 
@@ -121,24 +120,27 @@ export function Sidebar({ items, title, userData }: Props) {
 
       {/* 사용자 정보 섹션 */}
       {userData && (
-        <div className="mt-auto border-t p-4 flex items-center space-x-3">
-          {userData.user_metadata?.avatar_url && (
-            <div className="relative w-10 h-10 rounded-full overflow-hidden">
-              <img 
-                src={userData.user_metadata.avatar_url} 
-                alt={userData.user_metadata.user_name || '사용자'} 
-                className="w-full h-full object-cover"
-              />
+        <div className="mt-auto border-t p-4 flex items-center justify-between">
+          <div className="flex items-center space-x-3">
+            {userData.user_metadata?.avatar_url && (
+              <div className="relative w-10 h-10 rounded-full overflow-hidden">
+                <img 
+                  src={userData.user_metadata.avatar_url} 
+                  alt={userData.user_metadata.user_name || '사용자'} 
+                  className="w-full h-full object-cover"
+                />
+              </div>
+            )}
+            <div className="flex flex-col">
+              <span className="font-medium text-sm">
+                {userData.user_metadata?.user_name || userData.user_metadata?.name || userData.email}
+              </span>
+              <span className="text-xs text-muted-foreground">
+                {userData.email}
+              </span>
             </div>
-          )}
-          <div className="flex flex-col">
-            <span className="font-medium text-sm">
-              {userData.user_metadata?.user_name || userData.user_metadata?.name || userData.email}
-            </span>
-            <span className="text-xs text-muted-foreground">
-              {userData.email}
-            </span>
           </div>
+          <LogoutButton />
         </div>
       )}
     </div>
