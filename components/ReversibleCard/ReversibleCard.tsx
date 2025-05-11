@@ -102,7 +102,7 @@ function ReversibleCard({ questions, shuffle }: IReversibleCardProps) {
   );
 
   return (
-    <Card className="w-full mt-4">
+    <Card className="w-full mt-4 p-4">
       <CardContent className="h-[60vh] overflow-y-auto text-lg">
         {isFront ? (
           renderDisplayedQuestions
