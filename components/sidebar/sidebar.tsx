@@ -30,20 +30,21 @@ interface Props {
 const title = "...";
 
 export function Sidebar({ items, title }: Props) {
-  const { isOpen, toggleSidebar } = useSidebar();
+  const { isOpen } = useSidebar();
 
+  // 768px 미만에서는 overlay 형태, 그 이상에서는 고정형태로 레이아웃에 영향을 줌
   return (
     <div
       className={`
-      fixed inset-y-0 left-0 z-50 w-64 bg-background border-r transform transition-transform duration-200 ease-in-out
-      ${isOpen ? "translate-x-0" : "-translate-x-full"}
-      md:relative md:translate-x-0
-    `}
+        fixed inset-y-0 left-0 z-50 bg-background border-r transition-all duration-200 ease-in-out
+        ${isOpen ? "translate-x-0 w-64" : "-translate-x-full w-0"}
+        md:relative md:${isOpen ? "w-64" : "w-0 overflow-hidden"}
+      `}
     >
       <div className="flex justify-between items-center p-4 border-b">
         <SidebarToggle />
         <h2 className="font-semibold">{title}</h2>
-      <ThemeSwitcher />
+        <ThemeSwitcher />
       </div>
 
       <Accordion type="multiple" className="w-full">

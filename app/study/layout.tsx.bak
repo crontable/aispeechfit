@@ -1,4 +1,5 @@
-import { ThemeProvider } from "next-themes";
+import { ThemeSwitcher } from '@/components/theme-switcher';
+import { ThemeProvider } from 'next-themes';
 import { SidebarProvider } from '@/components/sidebar/sidebar-provider';
 import { Sidebar, SidebarItem } from '@/components/sidebar/sidebar';
 import { Book } from '@/domain/types';
@@ -10,13 +11,13 @@ import { MainContent } from '@/components/main-content';
 export default async function Layout({ children }: { children: React.ReactNode }) {
   const supabase = await createClient();
 
-  // Books 테이블 raw data 조회
+  // 2-1) Books 테이블 raw data 조회
   const { data: bookDTOs, error: fetchingBookError } = await supabase
     .from('books')
     .select('*')
     .order('id', { ascending: true });
 
-  // Chapters 테이블 raw data 조회
+  // 2-2) Chapters 테이블 raw data 조회
   const { data: chapterDTOs, error: fetchingChapterError } = await supabase
     .from('chapters')
     .select('*')
@@ -57,5 +58,26 @@ export default async function Layout({ children }: { children: React.ReactNode }
         </SidebarProvider>
       </ThemeProvider>
     </BooksProvider>
+  );
+}
+
+// 클라이언트 컴포넌트로 분리하여 사이드바 상태에 접근
+'use client';
+
+import { useSidebar } from '@/components/sidebar/sidebar-provider';
+
+function MainContent({ children }: { children: React.ReactNode }) {
+  const { isOpen } = useSidebar();
+
+  return (
+    <main className={`transition-all duration-200 ease-in-out flex-1 overflow-auto ${isOpen ? 'md:ml-0' : 'md:ml-0 md:w-full'}`}>
+      <div className="container mx-auto py-4">
+        <div className="flex justify-between items-center mb-4">
+          <SidebarToggle />
+        </div>
+        {/* <ChatArea /> */}
+        {children}
+      </div>
+    </main>
   );
 }
