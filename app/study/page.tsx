@@ -1,4 +1,5 @@
 import ReversibleCard from '@/components/ReversibleCard';
+import { ConditionalSidebarToggle } from '@/components/conditional-sidebar-toggle';
 import { convertToReversibleCardQuestions } from '@/lib/converter';
 import { createClient } from '@/utils/supabase/server';
 import { redirect } from 'next/navigation';
@@ -91,9 +92,14 @@ export default async function ProtectedPage() {
   const convertedQuestions = convertToReversibleCardQuestions(DUMMY_DATA[0].questions);
 
   return (
-    <div className="flex-1 w-full flex flex-col gap-12">
+    <div className="flex-1 w-full flex flex-col">
+      <div className="flex justify-between items-center h-40px">
+        <div className="flex items-center gap-2">
+          <ConditionalSidebarToggle />
+          <h1 className='text-xl'>구술 카드</h1>
+        </div>
+      </div>
       <div className="w-full">
-        <h1>구술 카드</h1>
         <ReversibleCard questions={convertedQuestions} />
       </div>
     </div>

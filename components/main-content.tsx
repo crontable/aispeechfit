@@ -18,9 +18,6 @@ export function MainContent({ children }: MainContentProps) {
       `}
     >
       <div className="container mx-auto py-4">
-        <div className="flex justify-between items-center mb-4">
-          <SidebarToggle />
-        </div>
         {children}
       </div>
     </main>

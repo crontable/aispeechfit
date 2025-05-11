@@ -44,7 +44,7 @@ export function Sidebar({ items, title }: Props) {
       `}
     >
       <div className="flex justify-between items-center p-4 border-b">
-        <SidebarToggle />
+        {isOpen && <SidebarToggle />}
         <h2 className="font-semibold">{title}</h2>
         <div className="flex items-center space-x-2">
           <ThemeSwitcher />
