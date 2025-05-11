@@ -11,8 +11,7 @@ interface Props {
   };
 }
 
-export default async function ChapterPage({ params: incomingParams }: Props) {
-  const params = await incomingParams;
+export default async function ChapterPage({ params }: Props) {
   const { bookId, chapterId } = params;
 
   const supabase = await createClient();
