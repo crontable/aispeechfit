@@ -1,18 +1,19 @@
+import { Metadata } from "next";
 import ReversibleCard from "@/components/ReversibleCard";
 import { ConditionalSidebarToggle } from "@/components/conditional-sidebar-toggle";
 import { convertToReversibleCardQuestions } from "@/lib/converter";
 import { createClient } from "@/utils/supabase/server";
 import { redirect } from "next/navigation";
 
-interface Props {
-  params: {
-    bookId: string;
-    chapterId: string;
-  };
-}
+// 페이지 매개변수의 타입 정의
+type PageParams = Promise<{
+  bookId: string;
+  chapterId: string;
+}>;
 
-export default async function ChapterPage({ params }: Props) {
-  const { bookId, chapterId } = params;
+export default async function ChapterPage({ params }: { params: PageParams }) {
+  // 명시적으로 params에서 값 추출
+  const { chapterId } = await params;
 
   const supabase = await createClient();
 
