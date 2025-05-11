@@ -11,6 +11,26 @@ const SidebarContext = React.createContext<SidebarContextType | undefined>(undef
 
 export function SidebarProvider({ children }: { children: React.ReactNode }) {
   const [isOpen, setIsOpen] = React.useState(true);
+  
+  React.useEffect(() => {
+    const mediaQuery = window.matchMedia('(max-width: 768px)');
+    
+    if (mediaQuery.matches) {
+      setIsOpen(false);
+    }
+    
+    const handleResize = (e: MediaQueryListEvent) => {
+      if (e.matches) {
+        setIsOpen(false);
+      }
+    };
+    
+    mediaQuery.addEventListener('change', handleResize);
+    
+    return () => {
+      mediaQuery.removeEventListener('change', handleResize);
+    };
+  }, []);
 
   const toggleSidebar = React.useCallback(() => {
     setIsOpen((prev) => !prev);
