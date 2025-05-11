@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import Link from "next/link";
 import {
   Accordion,
   AccordionContent,
@@ -87,12 +88,16 @@ export function Sidebar({ items, title }: Props) {
               </div>
             </AccordionTrigger>
             <AccordionContent>
-              <ul className="px-4 py-2">
+              <ul className="px-4 py-2 space-y-2">
                 {item.children?.map((child) => (
-                  <li key={child.id}>
-                    {child.title}
-                    <br />
-                    {child.href}
+                  <li key={child.id} className="hover:text-primary transition-colors">
+                    {child.href ? (
+                      <Link href={`/study${child.href}`} className="block py-1">
+                        {child.title}
+                      </Link>
+                    ) : (
+                      <span>{child.title}</span>
+                    )}
                   </li>
                 ))}
               </ul>
