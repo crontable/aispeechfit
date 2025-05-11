@@ -6,6 +6,7 @@ import { Book } from '@/domain/types';
 import { BooksProvider } from '@/components/providers/books-provider';
 import { convertBooks } from '@/lib/converter';
 import { createClient } from '@/utils/supabase/server';
+import { SidebarToggle } from '@/components/sidebar-toggle';
 
 export default async function Layout({ children }: { children: React.ReactNode }) {
   const supabase = await createClient();
@@ -55,8 +56,7 @@ export default async function Layout({ children }: { children: React.ReactNode }
             <main className="flex-1 overflow-auto">
               <div className="container mx-auto py-4">
                 <div className="flex justify-between items-center mb-4">
-                  {/* <SidebarToggle /> */}
-                  <ThemeSwitcher />
+                  <SidebarToggle />
                 </div>
                 {/* <ChatArea /> */}
                 {children}

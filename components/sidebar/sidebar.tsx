@@ -1,12 +1,16 @@
-'use client';
+"use client";
 
-import * as React from 'react';
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
-import { Book, X } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { useSidebar } from '@/components/sidebar/sidebar-provider';
-import { useAtom } from 'jotai';
-import { booksAtom } from '@/atoms/books';
+import * as React from "react";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
+
+import { useSidebar } from "@/components/sidebar/sidebar-provider";
+import { ThemeSwitcher } from "../theme-switcher";
+import { SidebarToggle } from "../sidebar-toggle";
 export interface SidebarItem {
   id: number;
   title: string;
@@ -23,7 +27,7 @@ interface Props {
   items: SidebarItem[];
 }
 
-const title = '...';
+const title = "...";
 
 export function Sidebar({ items, title }: Props) {
   const { isOpen, toggleSidebar } = useSidebar();
@@ -32,15 +36,14 @@ export function Sidebar({ items, title }: Props) {
     <div
       className={`
       fixed inset-y-0 left-0 z-50 w-64 bg-background border-r transform transition-transform duration-200 ease-in-out
-      ${isOpen ? 'translate-x-0' : '-translate-x-full'}
+      ${isOpen ? "translate-x-0" : "-translate-x-full"}
       md:relative md:translate-x-0
     `}
     >
-      <div className="flex justify-between items-center p-4 border-b md:hidden">
+      <div className="flex justify-between items-center p-4 border-b">
+        <SidebarToggle />
         <h2 className="font-semibold">{title}</h2>
-        <Button variant="ghost" size="icon" onClick={toggleSidebar}>
-          <X className="h-4 w-4" />
-        </Button>
+      <ThemeSwitcher />
       </div>
 
       <Accordion type="multiple" className="w-full">
