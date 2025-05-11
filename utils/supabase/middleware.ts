@@ -1,73 +1,72 @@
-import { ROUTE_PATH_STUDY } from '@/app/routes';
-import { createServerClient } from '@supabase/ssr';
-import { type NextRequest, NextResponse } from 'next/server';
+import { ROUTE_PATH } from "@/app/routes";
+import { createServerClient } from "@supabase/ssr";
+import { type NextRequest, NextResponse } from "next/server";
 
-export const updateSession = async (request: NextRequest) => {
-  // This `try/catch` block is only here for the interactive tutorial.
-  // Feel free to remove once you have Supabase connected.
-  try {
-    // Create an unmodified response
-    let response = NextResponse.next({
-      request: {
-        headers: request.headers,
-      },
-    });
+export async function updateSession(request: NextRequest) {
+  let supabaseResponse = NextResponse.next({
+    request,
+  });
 
-    const supabase = createServerClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      {
-        cookies: {
-          getAll() {
-            return request.cookies.getAll();
-          },
-          setAll(cookiesToSet) {
-            cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value));
-            response = NextResponse.next({
-              request,
-            });
-            cookiesToSet.forEach(({ name, value, options }) => response.cookies.set(name, value, options));
-          },
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        getAll() {
+          return request.cookies.getAll();
         },
-      }
-    );
-
-    // This will refresh session if expired - required for Server Components
-    // https://supabase.com/docs/guides/auth/server-side/nextjs
-    const authResponse = await supabase.auth.getUser();
-
-    // if (request.nextUrl.pathname === '/' && authResponse?.data?.user === null) {
-    //   console.log('///////////', authResponse);
-    //   return NextResponse.redirect(new URL('/sign-in', request.url));
-    // }
-
-    // protected routes
-    console.log(
-      '@@@@@@',
-      request.nextUrl.pathname,
-      request.nextUrl.pathname.startsWith(ROUTE_PATH_STUDY),
-      authResponse?.error
-    );
-
-    if (request.nextUrl.pathname.startsWith(ROUTE_PATH_STUDY)) {
-      console.log('로그인 데이터', authResponse.data);
-
-      if (authResponse?.error) return NextResponse.redirect(new URL('/sign-in', request.url));
-    }
-
-    if (request.nextUrl.pathname === '/' && !authResponse?.error) {
-      return NextResponse.redirect(new URL(ROUTE_PATH_STUDY, request.url));
-    }
-
-    return response;
-  } catch (e) {
-    // If you are here, a Supabase client could not be created!
-    // This is likely because you have not set up environment variables.
-    // Check out http://localhost:3000 for Next Steps.
-    return NextResponse.next({
-      request: {
-        headers: request.headers,
+        setAll(cookiesToSet) {
+          cookiesToSet.forEach(({ name, value, options }) => request.cookies.set(name, value));
+          supabaseResponse = NextResponse.next({
+            request,
+          });
+          cookiesToSet.forEach(({ name, value, options }) => supabaseResponse.cookies.set(name, value, options));
+        },
       },
-    });
+    }
+  );
+
+  // Do not run code between createServerClient and
+  // supabase.auth.getUser(). A simple mistake could make it very hard to debug
+  // issues with users being randomly logged out.
+
+  // IMPORTANT: DO NOT REMOVE auth.getUser()
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  console.log("#####", request.nextUrl.pathname);
+  console.log("\tSUPABASE Middleware 진입 > user:", user);
+
+  switch (request.nextUrl.pathname) {
+    case ROUTE_PATH.ROOT: // ROOT 접근 시 /study로 리다이렉트
+      return NextResponse.redirect(new URL(ROUTE_PATH.STUDY, request.url));
+    case ROUTE_PATH.SIGN_IN: // 로그인 되어 있을 경우 /study로 리다이렉트
+      if (user) return NextResponse.redirect(new URL(ROUTE_PATH.STUDY, request.url));
+      break;
+    case ROUTE_PATH.STUDY:
+      if (!user) {
+        // 로그인 정보가 없을 경우 로그인 페이지로 넘김
+        const url = request.nextUrl.clone();
+        url.pathname = ROUTE_PATH.SIGN_IN;
+        return NextResponse.redirect(url);
+      }
+      break;
   }
-};
+
+  // IMPORTANT: You *must* return the supabaseResponse object as it is.
+  // If you're creating a new response object with NextResponse.next() make sure to:
+  // 1. Pass the request in it, like so:
+  //    const myNewResponse = NextResponse.next({ request })
+  // 2. Copy over the cookies, like so:
+  //    myNewResponse.cookies.setAll(supabaseResponse.cookies.getAll())
+  // 3. Change the myNewResponse object to fit your needs, but avoid changing
+  //    the cookies!
+  // 4. Finally:
+  //    return myNewResponse
+  // If this is not done, you may be causing the browser and server to go out
+  // of sync and terminate the user's session prematurely!
+
+  return supabaseResponse;
+}

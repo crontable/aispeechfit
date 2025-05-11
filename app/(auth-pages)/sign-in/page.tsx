@@ -1,6 +1,7 @@
 'use client';
 
 import { Button } from '@/components/ui/button';
+import { DEFAULT_BASE_URL } from '@/constant';
 import { createClient } from '@/utils/supabase/client';
 import { useRouter } from 'next/navigation';
 
@@ -11,6 +12,9 @@ export default function Login() {
   async function signInWithKakao() {
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider: 'kakao',
+      options: {
+        redirectTo: `${DEFAULT_BASE_URL}/auth/callback`,
+      },
     });
 
     if (data.url) {
