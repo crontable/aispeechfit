@@ -21,7 +21,7 @@ export default function Login() {
       router.push(data.url);
     }
 
-    console.log('kakao', data, error);
+    // console.log('kakao', data, error);
   }
 
   return (
