@@ -35,7 +35,7 @@ interface Props {
 const title = "...";
 
 export function Sidebar({ items, title, userData }: Props) {
-  const { isOpen } = useSidebar();
+  const { isOpen, startLoading } = useSidebar();
   
   // 화면 너비 상태 추적
   const [isMobile, setIsMobile] = React.useState(false);
@@ -61,6 +61,11 @@ export function Sidebar({ items, title, userData }: Props) {
       window.removeEventListener('resize', checkIsMobile);
     };
   }, []);
+
+  // 링크 클릭 시 로딩 표시 시작하는 핸들러
+  const handleNavLinkClick = () => {
+    startLoading();
+  };
 
   return (
     <div
@@ -103,7 +108,11 @@ export function Sidebar({ items, title, userData }: Props) {
                   {item.children?.map((child) => (
                     <li key={child.id} className="hover:text-primary transition-colors">
                       {child.href ? (
-                        <Link href={`/study${child.href}`} className="block py-1">
+                        <Link 
+                          href={`/study${child.href}`} 
+                          className="block py-1"
+                          onClick={handleNavLinkClick}
+                        >
                           {child.title}
                         </Link>
                       ) : (
