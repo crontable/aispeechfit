@@ -1,10 +1,10 @@
 import { Geist } from 'next/font/google';
 import './globals.css';
-
-const defaultUrl = process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000';
+import { DEFAULT_BASE_URL } from '@/constant';
+import { Toaster } from 'sonner';
 
 export const metadata = {
-  metadataBase: new URL(defaultUrl),
+  metadataBase: new URL(DEFAULT_BASE_URL),
   title: 'Next.js and Supabase Starter Kit',
   description: 'The fastest way to build apps with Next.js and Supabase',
 };
@@ -21,7 +21,10 @@ export default async function RootLayout({
 }>) {
   return (
     <html lang="en" className={geistSans.className} suppressHydrationWarning>
-      <body className="bg-background text-foreground">{children}</body>
+      <body className="bg-background text-foreground">
+        {children}
+        <Toaster position="top-right" richColors closeButton />
+      </body>
     </html>
   );
 }

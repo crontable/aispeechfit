@@ -1,22 +1,29 @@
-import { ThemeSwitcher } from '@/components/theme-switcher';
-import { ThemeProvider } from 'next-themes';
+import { ThemeProvider } from "next-themes";
 import { SidebarProvider } from '@/components/sidebar/sidebar-provider';
 import { Sidebar, SidebarItem } from '@/components/sidebar/sidebar';
 import { Book } from '@/domain/types';
 import { BooksProvider } from '@/components/providers/books-provider';
 import { convertBooks } from '@/lib/converter';
 import { createClient } from '@/utils/supabase/server';
+import { MainContent } from '@/components/main-content';
 
 export default async function Layout({ children }: { children: React.ReactNode }) {
   const supabase = await createClient();
 
-  // 2-1) Books 테이블 raw data 조회
+  // 현재 로그인한 사용자 정보 가져오기
+  const { data: { user }, error: userError } = await supabase.auth.getUser();
+  
+  if (userError) {
+    console.error('Error fetching user:', userError);
+  }
+
+  // Books 테이블 raw data 조회
   const { data: bookDTOs, error: fetchingBookError } = await supabase
     .from('books')
     .select('*')
     .order('id', { ascending: true });
 
-  // 2-2) Chapters 테이블 raw data 조회
+  // Chapters 테이블 raw data 조회
   const { data: chapterDTOs, error: fetchingChapterError } = await supabase
     .from('chapters')
     .select('*')
@@ -51,17 +58,8 @@ export default async function Layout({ children }: { children: React.ReactNode }
       <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
         <SidebarProvider>
           <div className="flex h-screen">
-            <Sidebar items={sidebarItems} />
-            <main className="flex-1 overflow-auto">
-              <div className="container mx-auto py-4">
-                <div className="flex justify-between items-center mb-4">
-                  {/* <SidebarToggle /> */}
-                  <ThemeSwitcher />
-                </div>
-                {/* <ChatArea /> */}
-                {children}
-              </div>
-            </main>
+            <Sidebar items={sidebarItems} userData={user} />
+            <MainContent>{children}</MainContent>
           </div>
         </SidebarProvider>
       </ThemeProvider>

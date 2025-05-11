@@ -1,10 +1,8 @@
-import LogoutButton from '@/components/LogoutButton';
-import FetchDataSteps from '@/components/tutorial/fetch-data-steps';
+import { ConditionalSidebarToggle } from '@/components/conditional-sidebar-toggle';
 import { createClient } from '@/utils/supabase/server';
-import { InfoIcon } from 'lucide-react';
 import { redirect } from 'next/navigation';
 
-export default async function ProtectedPage() {
+export default async function StudyPage() {
   const supabase = await createClient();
 
   const {
@@ -16,24 +14,21 @@ export default async function ProtectedPage() {
   }
 
   return (
-    <div className="flex-1 w-full flex flex-col gap-12">
-      <div className="w-full">
-        <div className="bg-accent text-sm p-3 px-5 rounded-md text-foreground flex gap-3 items-center">
-          <InfoIcon size="16" strokeWidth={2} />
-          This is a protected page that you can only see as an authenticated user
+    <div className="flex-1 w-full flex flex-col">
+      <div className="flex justify-between items-center h-[40px]">
+        <div className="flex items-center gap-2">
+          <ConditionalSidebarToggle />
+          <h1 className='text-xl'>구술 공부</h1>
         </div>
       </div>
-      <div className="flex flex-col gap-2 items-start">
-        <h2 className="font-bold text-2xl mb-4">Your user details</h2>
-        <pre className="text-xs font-mono p-3 rounded border max-h-32 overflow-auto">
-          {JSON.stringify(user, null, 2)}
-        </pre>
+      <div className="w-full mt-4 flex justify-center items-center h-full">
+        <div className="text-center">
+          <h2 className="text-2xl font-bold mb-4">구술 연습을 시작해보세요</h2>
+          <p className="text-muted-foreground">
+            왼쪽 사이드바에서 공부할 주제를 선택하고 학습을 시작하세요.
+          </p>
+        </div>
       </div>
-      <div>
-        <h2 className="font-bold text-2xl mb-4">Next steps</h2>
-        <FetchDataSteps />
-      </div>
-      <LogoutButton />
     </div>
   );
 }
