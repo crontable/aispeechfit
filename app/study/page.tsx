@@ -93,13 +93,13 @@ export default async function ProtectedPage() {
 
   return (
     <div className="flex-1 w-full flex flex-col">
-      <div className="flex justify-between items-center h-40px">
+      <div className="flex justify-between items-center h-[40px]">
         <div className="flex items-center gap-2">
           <ConditionalSidebarToggle />
           <h1 className='text-xl'>구술 카드</h1>
         </div>
       </div>
-      <div className="w-full">
+      <div className="w-full mt-4">
         <ReversibleCard questions={convertedQuestions} />
       </div>
     </div>
