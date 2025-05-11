@@ -36,8 +36,8 @@ export async function updateSession(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  console.log("#####", request.nextUrl.pathname);
-  console.log("\tSUPABASE Middleware 진입 > user:", user);
+  // console.log("#####", request.nextUrl.pathname);
+  // console.log("\tSUPABASE Middleware 진입 > user:", user);
 
   switch (request.nextUrl.pathname) {
     case ROUTE_PATH.ROOT: // ROOT 접근 시 /study로 리다이렉트
