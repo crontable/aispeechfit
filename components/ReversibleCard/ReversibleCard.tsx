@@ -87,7 +87,7 @@ function ReversibleCard({ questions, shuffle }: IReversibleCardProps) {
       position,
       swapLabel,
       questionsCount,
-      scores,
+      score,
       priority,
     },
     methods: { prev, next, swap },
@@ -113,20 +113,15 @@ function ReversibleCard({ questions, shuffle }: IReversibleCardProps) {
 
       <div className="flex justify-between items-center mt-2">
         <ul className="flex items-center h-6 select-none">
-          {scores?.gpt4o && (
+          {score && (
             <li className="flex items-center mr-2">
-              G <NumberBadge number={scores.gpt4o} />
-            </li>
-          )}
-          {scores?.claudeOpus && (
-            <li className="flex items-center mr-2">
-              C <NumberBadge number={scores.claudeOpus} />
+              AI <NumberBadge number={score} />점
             </li>
           )}
         </ul>
         <div>
           <p>
-            {'🔥'.repeat(priority)} {position + 1}/{questionsCount} Questions
+            {'⭐️'.repeat(priority)} {position + 1}/{questionsCount} Questions
           </p>
         </div>
       </div>

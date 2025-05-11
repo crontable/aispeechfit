@@ -8,9 +8,9 @@ interface NumberBadgeProps {
 
 const NumberBadge = ({ number }: NumberBadgeProps) => {
   const getVariant = () => {
-    if (number <= 3) return "destructive";
-    if (number <= 7) return "secondary";
-    return "default";
+    if (number <= 14) return "destructive";
+    if (number <= 18) return "warning";
+    return "success";
   };
 
   return (

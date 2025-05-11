@@ -4,14 +4,7 @@ export interface IQuestion {
   answer: string;
   keywords?: string[];
   mainKeywords?: string[];
-  audio?: {
-    question?: string;
-    answer?: string;
-  };
-  scores?: {
-    chatgpt_4o?: number;
-    claude_opus?: number;
-  };
+  score?: number;
   priority?: number;
 }
 
