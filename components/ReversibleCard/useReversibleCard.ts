@@ -21,10 +21,7 @@ const useReversibleCard = ({ questions, shuffle }: IReversibleCardProps) => {
   ].filter(Boolean).sort(() => Math.random() - 0.5);
   
   const question = questions[position];
-  const scores = {
-    gpt4o: question?.scores?.chatgpt_4o,
-    claudeOpus: question?.scores?.claude_opus,
-  };
+  const score = question?.score;
   const priority = question?.priority ?? 0;
 
   useEffect(() => {
@@ -55,7 +52,7 @@ const useReversibleCard = ({ questions, shuffle }: IReversibleCardProps) => {
       position,
       question,
       questionsCount,
-      scores,
+      score,
       priority,
     },
     methods: {

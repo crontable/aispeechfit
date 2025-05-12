@@ -1,82 +1,116 @@
-"use client"
+"use client";
 
 /** @jsxImportSource @emotion/react */
 import { css } from "@emotion/react";
-import { 
-  Card, 
-  CardContent, 
-  CardFooter 
-} from "@/components/ui/card";
+import styled from "@emotion/styled";
+import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { IReversibleCardProps } from "./types";
 import useReversibleCard from "./useReversibleCard";
 import NumberBadge from "./NumberBadge";
 import { ClassAttributes, HTMLAttributes } from "react";
 
-const styles = {
-  cardContainer: css`
+const StyledCard = styled(Card)`
+  width: 100%;
+  margin-top: 16px;
+`;
+
+const StyledCardContent = styled(CardContent)`
+  height: 60vh;
+  overflow-y: auto;
+  font-size: 1.1rem;
+
+  
+  /* 테이블 추가 스타일 */
+  table {
     width: 100%;
-    margin-top: 16px;
-  `,
-  cardContent: css`
-    height: 60vh;
-    overflow-y: auto;
-    font-size: 1.1rem;
+  }
 
-    & table {
-      width: 100%;
-    }
+  table tr.strong-under-line {
+    border-bottom-width: 1.5px;
+  }
 
-    & table tr.strong-under-line {
-      border-bottom-width: 1.5px;
-    }
+  table td {
+    min-width: 4vw;
+  }
 
-    & table td {
-      min-width: 4vw;
-    }
+  table, 
+  th, 
+  td {
+    border-width: 1px;
+    border-collapse: collapse;
+  }
 
-    & table, & th, & td {
-      border-width: 1px;
-      border-color: var(--border);
-      border-collapse: collapse;
-    }
+  /* 테마별 테이블 경계선 색상 */
+  html.light & table,
+  html.light & th,
+  html.light & td {
+    border-color: oklch(60% 0.01 0); /* 연한 회색 (라이트 테마) */
+  }
+  
+  html.dark & table,
+  html.dark & th,
+  html.dark & td {
+    border-color: oklch(70% 0.01 0); /* 어두운 회색 (다크 테마) */
+  }
 
-    & ol {
-      list-style-type: decimal;
-      padding-left: 1.5rem;
-    }
+  ol,
+  ul {
+    list-style-type: disc;
+  }
 
-    & ul {
-      list-style-type: disc;
-      padding-left: 1.5rem;
-    }
-  `,
-  cardInfo: css`
+  ol {
+    list-style-type: decimal;
+    padding-left: 1.5rem;
+  }
+
+  ul {
+    list-style-type: disc;
+    padding-left: 1.5rem;
+  }
+  
+  strong.keyword {
+    color: var(--keyword-color);
+    font-weight: 600;
+  }
+
+  /* 대체 선택자 - html 태그에 클래스가 적용된 경우 */
+  html.light & strong.keyword {
+    color: oklch(54.6% 0.245 262.881);
+  }
+  
+  html.dark & strong.keyword {
+    color: oklch(87.9% 0.169 91.605);
+  }
+`;
+
+const CardInfo = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 8px;
+`;
+
+const BadgeList = styled.ul`
+  display: flex;
+  align-items: center;
+  height: 24px;
+  user-select: none;
+
+  & > li {
     display: flex;
-    justify-content: space-between;
     align-items: center;
-    margin-top: 8px;
-  `,
-  badgeList: css`
-    display: flex;
-    align-items: center;
-    height: 24px;
-    user-select: none;
-
-    & > li {
-      display: flex;
-      align-items: center;
-      &:not(:last-child) {
-        margin-right: 8px;
-      }
+    &:not(:last-child) {
+      margin-right: 8px;
     }
-  `,
-  buttonContainer: css`
-    display: flex;
-    gap: 8px;
-    justify-content: center;
-  `
-};
+  }
+`;
+
+const StyledCardFooter = styled(CardFooter)`
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+`;
 
 function ReversibleCard({ questions, shuffle }: IReversibleCardProps) {
   const {
@@ -87,7 +121,7 @@ function ReversibleCard({ questions, shuffle }: IReversibleCardProps) {
       position,
       swapLabel,
       questionsCount,
-      scores,
+      score,
       priority,
     },
     methods: { prev, next, swap },
@@ -102,36 +136,29 @@ function ReversibleCard({ questions, shuffle }: IReversibleCardProps) {
   );
 
   return (
-    <Card className="w-full mt-4 p-4">
-      <CardContent className="h-[60vh] overflow-y-auto text-lg">
+    <StyledCard className="p-4">
+      <StyledCardContent className="text-lg">
         {isFront ? (
           renderDisplayedQuestions
         ) : (
           <div dangerouslySetInnerHTML={{ __html: answer }} />
         )}
-      </CardContent>
+      </StyledCardContent>
 
-      <div className="flex justify-between items-center mt-2">
-        <ul className="flex items-center h-6 select-none">
-          {scores?.gpt4o && (
+      <CardInfo>
+        <BadgeList>
             <li className="flex items-center mr-2">
-              G <NumberBadge number={scores.gpt4o} />
+              AI {score ? <><NumberBadge number={score} />점</>: '예측 준비 중...' }
             </li>
-          )}
-          {scores?.claudeOpus && (
-            <li className="flex items-center mr-2">
-              C <NumberBadge number={scores.claudeOpus} />
-            </li>
-          )}
-        </ul>
+        </BadgeList>
         <div>
           <p>
-            {'🔥'.repeat(priority)} {position + 1}/{questionsCount} Questions
+            {"⭐️".repeat(priority)} {position + 1}/{questionsCount} Questions
           </p>
         </div>
-      </div>
+      </CardInfo>
 
-      <CardFooter className="flex gap-2 justify-center">
+      <StyledCardFooter>
         <Button variant="outline" onClick={prev}>
           이전
         </Button>
@@ -141,9 +168,9 @@ function ReversibleCard({ questions, shuffle }: IReversibleCardProps) {
         <Button variant="outline" onClick={next}>
           다음
         </Button>
-      </CardFooter>
-    </Card>
+      </StyledCardFooter>
+    </StyledCard>
   );
 }
 
-export default ReversibleCard; 
+export default ReversibleCard;
