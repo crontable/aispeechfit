@@ -5,8 +5,8 @@ import { Toaster } from 'sonner';
 
 export const metadata = {
   metadataBase: new URL(DEFAULT_BASE_URL),
-  title: 'Next.js and Supabase Starter Kit',
-  description: 'The fastest way to build apps with Next.js and Supabase',
+  title: 'AI 스피치핏',
+  description: '생활스포츠지도사 2급 구술 시험 준비 암기 앱',
 };
 
 const geistSans = Geist({
