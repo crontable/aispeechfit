@@ -147,9 +147,11 @@ function ReversibleCard({ questions, shuffle }: IReversibleCardProps) {
 
       <CardInfo>
         <BadgeList>
-            <li className="flex items-center mr-2">
-              AI {score ? <><NumberBadge number={score} />점</>: '예측 준비 중...' }
-            </li>
+            {!isFront && (
+              <li className="flex items-center mr-2">
+                AI 예측 {score ? <><NumberBadge number={score} />점</>: '예측 준비 중...' }
+              </li>
+            )}
         </BadgeList>
         <div>
           <p>
