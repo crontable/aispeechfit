@@ -14,6 +14,7 @@ import { useSidebar } from "@/components/sidebar/sidebar-provider";
 import { ThemeSwitcher } from "../theme-switcher";
 import { SidebarToggle } from "../sidebar-toggle";
 import LogoutButton from "../LogoutButton";
+import { SIDEBAR } from "@/constant";
 
 export interface SidebarItem {
   id: number;
@@ -35,37 +36,12 @@ interface Props {
 const title = "...";
 
 export function Sidebar({ items, title, userData }: Props) {
-  const { isOpen, startLoading } = useSidebar();
-  
-  // 화면 너비 상태 추적
-  const [isMobile, setIsMobile] = React.useState(false);
+  const { isOpen, isMobile, handleMobileNavigation } = useSidebar();
   
   // 기본적으로 펼칠 아이템 ID 생성
   const defaultExpandedItems = React.useMemo(() => {
     return items.map(item => item.id.toString());
   }, [items]);
-  
-  // 화면 크기 변경 감지
-  React.useEffect(() => {
-    const checkIsMobile = () => {
-      setIsMobile(window.innerWidth < 768);
-    };
-    
-    // 초기 체크
-    checkIsMobile();
-    
-    // 리사이즈 이벤트 리스너
-    window.addEventListener('resize', checkIsMobile);
-    
-    return () => {
-      window.removeEventListener('resize', checkIsMobile);
-    };
-  }, []);
-
-  // 링크 클릭 시 로딩 표시 시작하는 핸들러
-  const handleNavLinkClick = () => {
-    startLoading();
-  };
 
   return (
     <div
@@ -74,10 +50,10 @@ export function Sidebar({ items, title, userData }: Props) {
         ${isOpen 
           ? isMobile 
             ? "translate-x-0 w-full" // 모바일에서 전체 화면 차지
-            : "translate-x-0 w-64" // 태블릿/데스크탑에서 기본 너비
+            : `translate-x-0 ${SIDEBAR.CLASSES.DESKTOP_WIDTH}` // 태블릿/데스크탑에서 기본 너비
           : "-translate-x-full w-0"
         }
-        md:relative md:${isOpen ? "w-64" : "w-0 overflow-hidden"}
+        md:relative md:${isOpen ? SIDEBAR.CLASSES.DESKTOP_WIDTH : "w-0 overflow-hidden"}
       `}
     >
       <div className="flex justify-between items-center p-4 border-b">
@@ -111,7 +87,7 @@ export function Sidebar({ items, title, userData }: Props) {
                         <Link 
                           href={`/study${child.href}`} 
                           className="block py-1"
-                          onClick={handleNavLinkClick}
+                          onClick={handleMobileNavigation}
                         >
                           {child.title}
                         </Link>

@@ -36,7 +36,11 @@ export function MainContent({ children }: MainContentProps) {
         ${isMobile && isOpen ? 'opacity-0 pointer-events-none' : 'opacity-100 pointer-events-auto'}
       `}
     >
-      <div className="container mx-auto py-4">
+      <div className={`
+        mx-auto py-4
+        px-2 sm:px-4 md:px-6 lg:px-8
+        max-w-none sm:max-w-2xl md:max-w-4xl lg:max-w-6xl xl:max-w-7xl
+      `}>
         {children}
       </div>
     </main>
