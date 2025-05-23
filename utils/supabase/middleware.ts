@@ -52,6 +52,26 @@ export async function updateSession(request: NextRequest) {
         url.pathname = ROUTE_PATH.SIGN_IN;
         return NextResponse.redirect(url);
       }
+      
+      // 로그인 이후 이용권 확인
+      const now = new Date().toISOString();
+      const { data: tickets, error: ticketsError } = await supabase
+        .from('tickets')
+        .select('*')
+        .eq('user_id', user.id)
+        .lte('started_at', now)
+        .gte('expires_at', now)
+        .limit(1);
+      
+      // 이용권이 없거나 현재 유효한 이용권이 없는 경우
+      if (ticketsError || !tickets || tickets.length === 0) {
+        const url = request.nextUrl.clone();
+        url.pathname = ROUTE_PATH.UNAUTHORIZED;
+        return NextResponse.redirect(url);
+      }
+      break;
+    case ROUTE_PATH.UNAUTHORIZED:
+      // unauthorized 페이지 접근 시에는 그대로 통과
       break;
   }
 

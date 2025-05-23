@@ -3,4 +3,5 @@ export const ROUTE_PATH = {
   SIGN_IN: '/sign-in',
   AUTH_CALLBACK: '/auth/callback',
   STUDY: '/study',
+  UNAUTHORIZED: '/unauthorized',
 };
