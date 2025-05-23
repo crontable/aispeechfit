@@ -52,7 +52,7 @@ export async function updateSession(request: NextRequest) {
         url.pathname = ROUTE_PATH.SIGN_IN;
         return NextResponse.redirect(url);
       }
-      
+
       // 로그인 이후 이용권 확인
       const now = new Date().toISOString();
       const { data: tickets, error: ticketsError } = await supabase
