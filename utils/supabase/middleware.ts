@@ -39,41 +39,48 @@ export async function updateSession(request: NextRequest) {
   // console.log("#####", request.nextUrl.pathname);
   // console.log("\tSUPABASE Middleware 진입 > user:", user);
 
-  switch (request.nextUrl.pathname) {
-    case ROUTE_PATH.ROOT: // ROOT 접근 시 /study로 리다이렉트
-      return NextResponse.redirect(new URL(ROUTE_PATH.STUDY, request.url));
-    case ROUTE_PATH.SIGN_IN: // 로그인 되어 있을 경우 /study로 리다이렉트
-      if (user) return NextResponse.redirect(new URL(ROUTE_PATH.STUDY, request.url));
-      break;
-    case ROUTE_PATH.STUDY:
-      if (!user) {
-        // 로그인 정보가 없을 경우 로그인 페이지로 넘김
-        const url = request.nextUrl.clone();
-        url.pathname = ROUTE_PATH.SIGN_IN;
-        return NextResponse.redirect(url);
-      }
-      
-      // 로그인 이후 이용권 확인
-      const now = new Date().toISOString();
-      const { data: tickets, error: ticketsError } = await supabase
-        .from('tickets')
-        .select('*')
-        .eq('user_id', user.id)
-        .lte('started_at', now)
-        .gte('expires_at', now)
-        .limit(1);
-      
-      // 이용권이 없거나 현재 유효한 이용권이 없는 경우
-      if (ticketsError || !tickets || tickets.length === 0) {
-        const url = request.nextUrl.clone();
-        url.pathname = ROUTE_PATH.UNAUTHORIZED;
-        return NextResponse.redirect(url);
-      }
-      break;
-    case ROUTE_PATH.UNAUTHORIZED:
-      // unauthorized 페이지 접근 시에는 그대로 통과
-      break;
+  const pathname = request.nextUrl.pathname;
+
+  // ROOT 접근 시 /study로 리다이렉트
+  if (pathname === ROUTE_PATH.ROOT) {
+    return NextResponse.redirect(new URL(ROUTE_PATH.STUDY, request.url));
   }
+
+  // 로그인 페이지 처리 - 로그인 되어 있을 경우 /study로 리다이렉트
+  if (pathname === ROUTE_PATH.SIGN_IN) {
+    if (user) return NextResponse.redirect(new URL(ROUTE_PATH.STUDY, request.url));
+    return supabaseResponse;
+  }
+
+  // /study로 시작하는 모든 경로에 대해 권한 체크 적용
+  if (pathname.startsWith(ROUTE_PATH.STUDY)) {
+    if (!user) {
+      // 로그인 정보가 없을 경우 로그인 페이지로 넘김
+      const url = request.nextUrl.clone();
+      url.pathname = ROUTE_PATH.SIGN_IN;
+      return NextResponse.redirect(url);
+    }
+    
+    // 로그인 이후 이용권 확인
+    const now = new Date().toISOString();
+    const { data: tickets, error: ticketsError } = await supabase
+      .from('tickets')
+      .select('*')
+      .eq('user_id', user.id)
+      .eq('is_active', true)
+      .lte('started_at', now)
+      .gte('expires_at', now)
+      .limit(1);
+    
+    // 이용권이 없거나 현재 유효한 이용권이 없는 경우
+    if (ticketsError || !tickets || tickets.length === 0) {
+      const url = request.nextUrl.clone();
+      url.pathname = ROUTE_PATH.UNAUTHORIZED;
+      return NextResponse.redirect(url);
+    }
+  }
+
+  // unauthorized 페이지 접근 시에는 그대로 통과 (나머지 모든 경로 포함)
 
   // IMPORTANT: You *must* return the supabaseResponse object as it is.
   // If you're creating a new response object with NextResponse.next() make sure to:
