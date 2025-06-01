@@ -21,7 +21,7 @@ export default async function Layout({ children }: { children: React.ReactNode }
   const { data: bookDTOs, error: fetchingBookError } = await supabase
     .from('books')
     .select('*')
-    .order('id', { ascending: true });
+    .order('id', { ascending: false });
 
   // Chapters 테이블 raw data 조회
   const { data: chapterDTOs, error: fetchingChapterError } = await supabase
