@@ -29,6 +29,11 @@
 - supabase-ssr. A package to configure Supabase Auth to use cookies
 - Styling with [Tailwind CSS](https://tailwindcss.com)
 - Components with [shadcn/ui](https://ui.shadcn.com/)
+- **인앱 브라우저 대응 기능**
+  - 카카오톡, 네이버, 인스타그램 등 인앱 브라우저 자동 감지
+  - Google 로그인 403 오류 방지를 위한 외부 브라우저 리다이렉트
+  - Android Intent 및 iOS URL Scheme을 활용한 스마트 브라우저 전환
+  - 사용자 친화적인 경고 메시지 및 토스트 알림
 - Optional deployment with [Supabase Vercel Integration and Vercel deploy](#deploy-your-own)
   - Environment variables automatically assigned to Vercel project
 
