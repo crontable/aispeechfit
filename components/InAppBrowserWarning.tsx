@@ -3,7 +3,13 @@
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { AlertTriangle, ExternalLink, Smartphone } from 'lucide-react';
-import { isInAppBrowser, isAndroid, isIOS, openInExternalBrowser } from '@/utils/browser-detection';
+import {
+  isInAppBrowser,
+  isAndroid,
+  isIOS,
+  openInExternalBrowser,
+  getDetailedBrowserInfo,
+} from '@/utils/browser-detection';
 
 interface InAppBrowserWarningProps {
   onClose?: () => void;
@@ -14,7 +20,9 @@ export default function InAppBrowserWarning({ onClose }: InAppBrowserWarningProp
   const [platform, setPlatform] = useState<'android' | 'ios' | 'other'>('other');
 
   useEffect(() => {
-    setIsInApp(isInAppBrowser());
+    const inAppResult = isInAppBrowser();
+    setIsInApp(inAppResult);
+
     if (isAndroid()) {
       setPlatform('android');
     } else if (isIOS()) {
@@ -22,6 +30,11 @@ export default function InAppBrowserWarning({ onClose }: InAppBrowserWarningProp
     } else {
       setPlatform('other');
     }
+
+    // 디버깅 정보 출력
+    const debugInfo = getDetailedBrowserInfo();
+    console.log('브라우저 감지 디버깅 정보:', debugInfo);
+    console.log('인앱 브라우저 감지 결과:', inAppResult);
   }, []);
 
   const handleOpenExternalBrowser = () => {
@@ -62,9 +75,7 @@ export default function InAppBrowserWarning({ onClose }: InAppBrowserWarningProp
             <AlertTriangle className="h-6 w-6 text-amber-500" />
           </div>
           <div className="flex-1">
-            <h3 className="text-lg font-semibold text-gray-900">
-              로그인 제한 안내
-            </h3>
+            <h3 className="text-lg font-semibold text-gray-900">로그인 제한 안내</h3>
           </div>
         </div>
 
@@ -75,18 +86,14 @@ export default function InAppBrowserWarning({ onClose }: InAppBrowserWarningProp
               <p className="mb-2">
                 현재 카카오톡, 네이버 등의 <strong>인앱 브라우저</strong>에서 접속하고 계십니다.
               </p>
-              <p className="mb-2">
-                Google의 보안 정책에 따라 인앱 브라우저에서는 Google 로그인이 제한됩니다.
-              </p>
-              <p className="text-amber-600 font-medium">
-                {getInstructions()}
-              </p>
+              <p className="mb-2">Google의 보안 정책에 따라 인앱 브라우저에서는 Google 로그인이 제한됩니다.</p>
+              <p className="text-amber-600 font-medium">{getInstructions()}</p>
             </div>
           </div>
         </div>
 
         <div className="flex flex-col space-y-3 pt-4">
-          <Button 
+          <Button
             onClick={handleOpenExternalBrowser}
             className="w-full flex items-center justify-center space-x-2"
             size="lg"
@@ -94,14 +101,9 @@ export default function InAppBrowserWarning({ onClose }: InAppBrowserWarningProp
             <ExternalLink className="h-4 w-4" />
             <span>{getBrowserName()}으로 열기</span>
           </Button>
-          
+
           {onClose && (
-            <Button 
-              onClick={onClose}
-              variant="outline"
-              className="w-full"
-              size="sm"
-            >
+            <Button onClick={onClose} variant="outline" className="w-full" size="sm">
               닫기
             </Button>
           )}
@@ -113,4 +115,4 @@ export default function InAppBrowserWarning({ onClose }: InAppBrowserWarningProp
       </div>
     </div>
   );
-} 
+}
