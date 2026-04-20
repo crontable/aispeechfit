@@ -67,5 +67,11 @@
   }
   body {
     @apply bg-background text-foreground;
+    font-family:
+      'Apple SD Gothic Neo',
+      'Noto Sans KR',
+      'Malgun Gothic',
+      'Segoe UI',
+      sans-serif;
   }
 }
