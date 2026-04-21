@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 import { createContext, useContext, useState } from 'react';
-import { usePathname, useRouter } from 'next/navigation';
+import { usePathname } from 'next/navigation';
 import { LoadingOverlay } from '@/components/loading-overlay';
 import { BREAKPOINTS } from '@/constant';
 
@@ -23,34 +23,30 @@ export function SidebarProvider({ children }: { children: React.ReactNode }) {
   const [isOpen, setIsOpen] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
-  const router = useRouter();
   const pathname = usePathname();
 
   // 화면 크기 감지 및 반응형 사이드바 자동 조절
   React.useEffect(() => {
     const checkIsMobile = () => {
-      const newIsMobile = window.innerWidth < BREAKPOINTS.MOBILE_MAX;
-      const prevIsMobile = isMobile;
-      
-      setIsMobile(newIsMobile);
-      
-      // 모바일에서 데스크탑으로 변경된 경우 자동으로 사이드바 열기
-      if (prevIsMobile && !newIsMobile) {
-        setIsOpen(true);
-      }
-      // 데스크탑에서 모바일로 변경된 경우 사이드바 닫기 (선택적)
-      else if (!prevIsMobile && newIsMobile) {
-        setIsOpen(false);
-      }
+      const nextIsMobile = window.innerWidth < BREAKPOINTS.MOBILE_MAX;
+      setIsMobile((previousIsMobile) => {
+        if (previousIsMobile && !nextIsMobile) {
+          setIsOpen(true);
+        } else if (!previousIsMobile && nextIsMobile) {
+          setIsOpen(false);
+        }
+
+        return nextIsMobile;
+      });
     };
-    
+
     checkIsMobile();
     window.addEventListener('resize', checkIsMobile);
-    
+
     return () => {
       window.removeEventListener('resize', checkIsMobile);
     };
-  }, [isMobile]); // isMobile을 의존성에 추가하여 이전 상태와 비교
+  }, []);
 
   // 사이드바 토글 함수
   const toggleSidebar = () => {

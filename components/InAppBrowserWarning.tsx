@@ -8,7 +8,6 @@ import {
   isAndroid,
   isIOS,
   openInExternalBrowser,
-  getDetailedBrowserInfo,
 } from '@/utils/browser-detection';
 
 interface InAppBrowserWarningProps {
@@ -30,11 +29,6 @@ export default function InAppBrowserWarning({ onClose }: InAppBrowserWarningProp
     } else {
       setPlatform('other');
     }
-
-    // 디버깅 정보 출력
-    const debugInfo = getDetailedBrowserInfo();
-    console.log('브라우저 감지 디버깅 정보:', debugInfo);
-    console.log('인앱 브라우저 감지 결과:', inAppResult);
   }, []);
 
   const handleOpenExternalBrowser = () => {

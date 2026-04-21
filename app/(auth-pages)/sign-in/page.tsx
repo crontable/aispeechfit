@@ -40,7 +40,7 @@ export default function Login() {
 
     try {
       toast.loading('Google 로그인 중...', { id: 'google-login' });
-      
+
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
@@ -49,20 +49,20 @@ export default function Login() {
       });
 
       if (error) {
-        toast.error('로그인 중 오류가 발생했습니다.', { id: 'google-login' });
-        console.error('Google 로그인 오류:', error);
+        toast.error(error.message || '로그인 중 오류가 발생했습니다.', { id: 'google-login' });
         return;
       }
 
       if (data.url) {
         toast.success('Google 로그인 페이지로 이동합니다.', { id: 'google-login' });
         router.push(data.url);
+        return;
       }
 
-      console.log('google', data, error);
+      toast.error('로그인 페이지 주소를 불러오지 못했습니다.', { id: 'google-login' });
     } catch (err) {
-      toast.error('로그인 중 예상치 못한 오류가 발생했습니다.', { id: 'google-login' });
-      console.error('Google 로그인 예외:', err);
+      const message = err instanceof Error ? err.message : '로그인 중 예상치 못한 오류가 발생했습니다.';
+      toast.error(message, { id: 'google-login' });
     }
   }
 

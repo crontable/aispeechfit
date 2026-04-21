@@ -138,6 +138,9 @@ export function isIOS(): boolean {
  */
 export function openInExternalBrowser(url?: string): void {
   const targetUrl = url || window.location.href;
+  const openFallbackWindow = () => {
+    window.open(targetUrl, '_blank', 'noopener,noreferrer');
+  };
 
   if (isAndroid()) {
     // Android: Chrome Intent 사용
@@ -154,11 +157,10 @@ export function openInExternalBrowser(url?: string): void {
 
       // 모든 방법이 실패한 경우를 위한 최종 fallback
       setTimeout(() => {
-        window.open(targetUrl, '_blank', 'noopener,noreferrer');
+        openFallbackWindow();
       }, 3000);
-    } catch (error) {
-      console.warn('Intent URL 실행 실패, fallback 사용:', error);
-      window.open(targetUrl, '_blank', 'noopener,noreferrer');
+    } catch {
+      openFallbackWindow();
     }
   } else if (isIOS()) {
     // iOS: Safari로 열기 시도
@@ -175,15 +177,14 @@ export function openInExternalBrowser(url?: string): void {
 
       // 최종 fallback
       setTimeout(() => {
-        window.open(targetUrl, '_blank', 'noopener,noreferrer');
+        openFallbackWindow();
       }, 3000);
-    } catch (error) {
-      console.warn('iOS 외부 브라우저 열기 실패, fallback 사용:', error);
-      window.open(targetUrl, '_blank', 'noopener,noreferrer');
+    } catch {
+      openFallbackWindow();
     }
   } else {
     // 데스크톱 또는 기타 플랫폼
-    window.open(targetUrl, '_blank', 'noopener,noreferrer');
+    openFallbackWindow();
   }
 }
 

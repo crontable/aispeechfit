@@ -25,18 +25,17 @@ export default function LogoutButton({
   async function signOut() {
     try {
       const { error } = await supabase.auth.signOut();
-      
+
       if (error) {
-        toast.error('로그아웃 중 오류가 발생했습니다');
-        console.error('로그아웃 오류:', error);
+        toast.error(error.message || '로그아웃 중 오류가 발생했습니다');
         return;
       }
-      
+
       toast.success('로그아웃 되었습니다');
-      router.push('/sign-in');
+      router.replace('/sign-in');
     } catch (err) {
-      toast.error('로그아웃 중 오류가 발생했습니다');
-      console.error('로그아웃 오류:', err);
+      const message = err instanceof Error ? err.message : '로그아웃 중 오류가 발생했습니다';
+      toast.error(message);
     }
   }
 

@@ -1,14 +1,12 @@
 "use client";
 
 /** @jsxImportSource @emotion/react */
-import { css } from "@emotion/react";
 import styled from "@emotion/styled";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { IReversibleCardProps } from "./types";
 import useReversibleCard from "./useReversibleCard";
 import NumberBadge from "./NumberBadge";
-import { ClassAttributes, HTMLAttributes } from "react";
 
 const StyledCard = styled(Card)`
   width: 100%;
@@ -130,7 +128,7 @@ function ReversibleCard({ questions, shuffle }: IReversibleCardProps) {
   const renderDisplayedQuestions = (
     <ul>
       {displayedQuestions.map((question, index) => (
-        <li key={index}>{question}</li>
+          <li key={index}>{question}</li>
       ))}
     </ul>
   );
@@ -147,15 +145,15 @@ function ReversibleCard({ questions, shuffle }: IReversibleCardProps) {
 
       <CardInfo>
         <BadgeList>
-            {!isFront && (
-              <li className="flex items-center mr-2">
-                AI 예측 {score ? <><NumberBadge number={score} />점</>: '준비 중...' }
-              </li>
-            )}
+          {!isFront && (
+            <li className="flex items-center mr-2">
+              AI 예측 {score ? <><NumberBadge number={score} />점</> : '준비 중...'}
+            </li>
+          )}
         </BadgeList>
         <div>
           <p>
-            {"⭐️".repeat(priority)} {position + 1}/{questionsCount} Questions
+            {"⭐️".repeat(priority)} {position + 1}/{questionsCount} 문항
           </p>
         </div>
       </CardInfo>

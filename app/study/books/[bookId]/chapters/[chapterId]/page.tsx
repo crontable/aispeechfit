@@ -1,4 +1,3 @@
-import { Metadata } from "next";
 import ReversibleCard from "@/components/ReversibleCard";
 import { ConditionalSidebarToggle } from "@/components/conditional-sidebar-toggle";
 import { convertToReversibleCardQuestions } from "@/lib/converter";
@@ -33,7 +32,6 @@ export default async function ChapterPage({ params }: { params: PageParams }) {
     .single();
 
   if (chapterError) {
-    console.error("Error fetching chapter:", chapterError);
     return <div>챕터 정보를 불러오는 중 오류가 발생했습니다.</div>;
   }
 
@@ -46,7 +44,6 @@ export default async function ChapterPage({ params }: { params: PageParams }) {
     .order("id", { ascending: true });
 
   if (questionsError) {
-    console.error("Error fetching questions:", questionsError);
     return <div>질문 데이터를 불러오는 중 오류가 발생했습니다.</div>;
   }
 

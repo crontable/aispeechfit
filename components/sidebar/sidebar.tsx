@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
+import Image from "next/image";
 import {
   Accordion,
   AccordionContent,
@@ -33,11 +34,10 @@ interface Props {
   userData?: User | null;
 }
 
-const title = "...";
-
 export function Sidebar({ items, title, userData }: Props) {
   const { isOpen, isMobile, handleMobileNavigation } = useSidebar();
-  
+  const sidebarTitle = title ?? '구술 공부';
+
   // 기본적으로 펼칠 아이템 ID 생성
   const defaultExpandedItems = React.useMemo(() => {
     return items.map(item => item.id.toString());
@@ -59,7 +59,7 @@ export function Sidebar({ items, title, userData }: Props) {
       <div className="flex justify-between items-center p-4 border-b">
         {/* 사이드바가 열려 있을 때만 토글 버튼 표시 */}
         {isOpen && <SidebarToggle />}
-        <h2 className="font-semibold">{title}</h2>
+        <h2 className="font-semibold">{sidebarTitle}</h2>
         <div className="flex items-center space-x-2">
           <ThemeSwitcher />
         </div>
@@ -109,10 +109,13 @@ export function Sidebar({ items, title, userData }: Props) {
           <div className="flex items-center space-x-3">
             {userData.user_metadata?.avatar_url && (
               <div className="relative w-10 h-10 rounded-full overflow-hidden">
-                <img 
-                  src={userData.user_metadata.avatar_url} 
-                  alt={userData.user_metadata.user_name || '사용자'} 
-                  className="w-full h-full object-cover"
+                <Image
+                  src={userData.user_metadata.avatar_url}
+                  alt={userData.user_metadata.user_name || '사용자'}
+                  fill
+                  sizes="40px"
+                  unoptimized
+                  className="object-cover"
                 />
               </div>
             )}

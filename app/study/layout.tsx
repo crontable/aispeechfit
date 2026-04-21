@@ -11,11 +11,7 @@ export default async function Layout({ children }: { children: React.ReactNode }
   const supabase = await createClient();
 
   // 현재 로그인한 사용자 정보 가져오기
-  const { data: { user }, error: userError } = await supabase.auth.getUser();
-  
-  if (userError) {
-    console.error('Error fetching user:', userError);
-  }
+  const { data: { user } } = await supabase.auth.getUser();
 
   // Books 테이블 raw data 조회
   const { data: bookDTOs, error: fetchingBookError } = await supabase
@@ -29,19 +25,14 @@ export default async function Layout({ children }: { children: React.ReactNode }
     .select('*')
     .order('sort_order', { ascending: true });
 
-  // 에러 확인
-  if (fetchingBookError) {
-    console.error('Error fetching books:', fetchingBookError);
-  }
-  if (fetchingChapterError) {
-    console.error('Error fetching chapters:', fetchingChapterError);
+  if (fetchingBookError || fetchingChapterError) {
+    return <div>학습 자료를 불러오는 중 문제가 생겼습니다.</div>;
   }
 
-  if (!bookDTOs || !chapterDTOs) {
-    return <div>Loading...</div>;
-  }
-
-  const books = convertBooks({ bookDTOs, chapterDTOs });
+  const books = convertBooks({
+    bookDTOs: bookDTOs ?? [],
+    chapterDTOs: chapterDTOs ?? [],
+  });
 
   const sidebarItems: SidebarItem[] = books.map((book: Book) => ({
     id: book.id,

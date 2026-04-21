@@ -8,31 +8,32 @@ export async function GET(request: Request) {
   const code = searchParams.get("code");
   // if "next" is in param, use it as the redirect URL
   const next = searchParams.get("next") ?? ROUTE_PATH.STUDY;
+  const signInUrl = new URL(ROUTE_PATH.SIGN_IN, origin);
 
   if (code) {
     try {
       const supabase = await createClient();
       const { error } = await supabase.auth.exchangeCodeForSession(code);
-
-      console.error("$$$$$$$$ CALLBACK ROUTE CODE", error);
-
-      if (!error) {
-        const forwardedHost = request.headers.get("x-forwarded-host"); // original origin before load balancer
-        const isLocalEnv = process.env.NODE_ENV === "development";
-        if (isLocalEnv) {
-          // we can be sure that there is no load balancer in between, so no need to watch for X-Forwarded-Host
-          return NextResponse.redirect(new URL(`${origin}${next}`, request.url));
-        } else if (forwardedHost) {
-          return NextResponse.redirect(new URL(`https://${forwardedHost}${next}`, request.url));
-        } else {
-          return NextResponse.redirect(new URL(`${origin}${next}`, request.url));
-        }
+      if (error) {
+        return NextResponse.redirect(signInUrl);
       }
-    } catch (error) {
-      console.error(error);
+
+      const forwardedHost = request.headers.get("x-forwarded-host"); // original origin before load balancer
+      const isLocalEnv = process.env.NODE_ENV === "development";
+      if (isLocalEnv) {
+        // we can be sure that there is no load balancer in between, so no need to watch for X-Forwarded-Host
+        return NextResponse.redirect(new URL(`${origin}${next}`, request.url));
+      }
+
+      if (forwardedHost) {
+        return NextResponse.redirect(new URL(`https://${forwardedHost}${next}`, request.url));
+      }
+
+      return NextResponse.redirect(new URL(`${origin}${next}`, request.url));
+    } catch {
+      return NextResponse.redirect(signInUrl);
     }
   }
 
-  // return the user to an error page with instructions
-  return NextResponse.redirect(`${origin}/auth/auth-code-error`);
+  return NextResponse.redirect(signInUrl);
 }
