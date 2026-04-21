@@ -1,9 +1,7 @@
-"use client"
+'use client';
 
 import { useEffect, useState } from 'react';
-import { atom, useAtom } from 'jotai';
-import { IQuestion } from './types';
-import { IReversibleCardProps } from './types';
+import { type IQuestion, type IReversibleCardProps } from './types';
 
 // AudioAutoPlay 관련 코드 제거
 const useReversibleCard = ({ questions, shuffle }: IReversibleCardProps) => {
@@ -16,10 +14,10 @@ const useReversibleCard = ({ questions, shuffle }: IReversibleCardProps) => {
   const card = cards[position];
   const hasSimilarQuestions = card?.similarQuestions && card.similarQuestions.length > 0;
   const displayedQuestions = [
-    card?.question, 
-    ...(hasSimilarQuestions && Array.isArray(card.similarQuestions) ? card.similarQuestions : [])
+    card?.question,
+    ...(hasSimilarQuestions && Array.isArray(card.similarQuestions) ? card.similarQuestions : []),
   ].filter(Boolean).sort(() => Math.random() - 0.5);
-  
+
   const question = questions[position];
   const score = question?.score;
   const priority = question?.priority ?? 0;

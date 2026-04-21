@@ -1,0 +1,87 @@
+module.exports = {
+  root: true,
+  env: {
+    browser: true,
+    es2022: true,
+    node: true,
+  },
+  extends: [
+    'airbnb',
+    'airbnb-typescript',
+    'next/core-web-vitals',
+    'prettier',
+  ],
+  parser: '@typescript-eslint/parser',
+  parserOptions: {
+    project: './tsconfig.json',
+    tsconfigRootDir: __dirname,
+  },
+  settings: {
+    'import/resolver': {
+      typescript: {
+        project: './tsconfig.json',
+      },
+    },
+  },
+  rules: {
+    'react/react-in-jsx-scope': 'off',
+    'react/require-default-props': 'off',
+    'react/function-component-definition': 'off',
+    'react/jsx-filename-extension': [
+      'warn',
+      {
+        extensions: ['.tsx'],
+      },
+    ],
+    'react/jsx-no-bind': 'off',
+    'react/jsx-no-constructed-context-values': 'off',
+    'react/jsx-one-expression-per-line': 'off',
+    'react/jsx-props-no-spreading': 'off',
+    'react/jsx-curly-brace-presence': 'off',
+    'react/jsx-no-useless-fragment': 'off',
+    'react/no-array-index-key': 'off',
+    'react/no-danger': 'off',
+    'react/no-unescaped-entities': 'off',
+    'react/self-closing-comp': 'off',
+    'import/extensions': [
+      'error',
+      'ignorePackages',
+      {
+        js: 'never',
+        jsx: 'never',
+        ts: 'never',
+        tsx: 'never',
+      },
+    ],
+    'import/prefer-default-export': 'off',
+    'import/order': 'off',
+    'import/no-extraneous-dependencies': [
+      'error',
+      {
+        devDependencies: [
+          '**/*.config.js',
+          '**/*.config.ts',
+          'tailwind.config.ts',
+          'next.config.ts',
+          'postcss.config.js',
+        ],
+      },
+    ],
+    '@typescript-eslint/no-unused-vars': 'warn',
+    '@typescript-eslint/no-use-before-define': 'off',
+    '@typescript-eslint/no-shadow': 'off',
+    'jsx-a11y/label-has-associated-control': 'off',
+    'max-len': 'off',
+    'object-curly-newline': 'off',
+    'operator-linebreak': 'off',
+    'arrow-body-style': 'off',
+    'no-else-return': 'off',
+    'no-nested-ternary': 'off',
+    'no-useless-return': 'off',
+    'padded-blocks': 'off',
+    'prefer-destructuring': 'off',
+    'lines-around-directive': 'off',
+    'global-require': 'off',
+    'radix': 'off',
+  },
+};

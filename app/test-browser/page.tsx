@@ -122,7 +122,7 @@ export default function TestBrowserPage() {
 
         <div className="text-center">
           <Button 
-            onClick={() => window.location.href = '/sign-in'}
+            onClick={() => window.location.assign('/sign-in')}
             variant="outline"
           >
             로그인 페이지로 이동
