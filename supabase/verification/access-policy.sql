@@ -21,8 +21,9 @@ select routine_name, security_type from information_schema.routines where routin
 select r.rolname, has_function_privilege(r.rolname, 'public.has_active_ticket()', 'execute') as can_execute
 from pg_roles r where r.rolname in ('anon', 'authenticated');
 
--- 6. 기본 권한: 적용 후에는 tables·sequences·functions(r·S·f) 어느 행에도 anon·authenticated가 없고,
---    함수 행에 =X/postgres(PUBLIC 실행) 항목이 없다. 적용 전에는 세 행 모두 anon·authenticated가 있다.
+-- 6. 기본 권한: 적용 후 creator=postgres 행(r·S·f)에는 postgres·service_role만 있고 anon·authenticated가 없다.
+--    creator=supabase_admin 행은 Supabase 플랫폼 초기값이라 postgres 권한으로 바꿀 수 없고 그대로 남는다.
+--    대시보드·SQL Editor·CLI는 postgres로 객체를 만들므로 postgres 행이 실제 기본값이다.
 select defaclrole::regrole as creator, defaclnamespace::regnamespace as schema, defaclobjtype as objtype, defaclacl
 from pg_default_acl
 where defaclnamespace = 'public'::regnamespace;

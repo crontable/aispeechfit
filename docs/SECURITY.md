@@ -49,7 +49,7 @@
 
 ## 새 테이블·뷰·함수를 만들 때
 
-`public` 스키마의 기본 권한을 거두어 두었으므로, 새로 만든 테이블·시퀀스·함수에는 `anon`·`authenticated` 권한이 자동으로 붙지 않는다. 앱에서 읽으려면 마이그레이션에 아래를 함께 적는다.
+`postgres` 역할이 `public`에 만드는 테이블·시퀀스·함수의 기본 권한을 거두어 두었으므로, 대시보드·SQL Editor·CLI로 새로 만든 객체에는 `anon`·`authenticated` 권한이 자동으로 붙지 않는다. `supabase_admin` 역할의 기본 권한은 플랫폼 초기값이라 바꿀 수 없으며, 그 역할로 만든 객체가 생기면 `supabase/verification/access-policy.sql` 3번 질의로 권한을 확인한다. 앱에서 읽으려면 마이그레이션에 아래를 함께 적는다.
 
 1. `alter table ... enable row level security;`
 2. 필요한 명령만 `grant select on ... to authenticated;`
