@@ -6,6 +6,7 @@ import { DEFAULT_BASE_URL } from '@/constant';
 import { createClient } from '@/utils/supabase/client';
 import { useRouter } from 'next/navigation';
 import { isInAppBrowser } from '@/utils/browser-detection';
+import { useIsClient } from '@/lib/use-is-client';
 import InAppBrowserWarning from '@/components/InAppBrowserWarning';
 import { AlertTriangle } from 'lucide-react';
 import { toast } from 'sonner';
@@ -14,19 +15,17 @@ export default function Login() {
   const router = useRouter();
   const supabase = createClient();
   const [showWarning, setShowWarning] = useState(false);
-  const [isInApp, setIsInApp] = useState(false);
+  const isClient = useIsClient();
+  const isInApp = isClient && isInAppBrowser();
 
+  // 인앱 브라우저 감지 시 초기 알림
   useEffect(() => {
-    const inAppStatus = isInAppBrowser();
-    setIsInApp(inAppStatus);
-    
-    // 인앱 브라우저 감지 시 초기 알림
-    if (inAppStatus) {
+    if (isInApp) {
       toast.warning('인앱 브라우저가 감지되었습니다. Google 로그인이 제한될 수 있습니다.', {
         duration: 5000,
       });
     }
-  }, []);
+  }, [isInApp]);
 
   async function signInWithGoogle() {
     // 인앱 브라우저에서 Google 로그인 시도 시 경고 표시

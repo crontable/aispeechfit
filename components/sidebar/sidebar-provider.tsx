@@ -25,6 +25,14 @@ export function SidebarProvider({ children }: { children: React.ReactNode }) {
   const [isMobile, setIsMobile] = useState(false);
   const pathname = usePathname();
 
+  // 페이지가 바뀌면 렌더 중에 로딩 상태를 끝낸다.
+  // useEffect 안에서 setState를 부르던 자리를 React가 권하는 방식으로 바꾼 것이다.
+  const [prevPathname, setPrevPathname] = useState(pathname);
+  if (pathname !== prevPathname) {
+    setPrevPathname(pathname);
+    setIsLoading(false);
+  }
+
   // 화면 크기 감지 및 반응형 사이드바 자동 조절
   React.useEffect(() => {
     const checkIsMobile = () => {
@@ -76,11 +84,6 @@ export function SidebarProvider({ children }: { children: React.ReactNode }) {
       setIsOpen(false);
     }
   };
-
-  // 페이지 변경 감지 및 로딩 상태 관리
-  React.useEffect(() => {
-    stopLoading();
-  }, [pathname]);
 
   return (
     <SidebarContext.Provider

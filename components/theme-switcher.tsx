@@ -10,16 +10,12 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Laptop, Moon, Sun } from "lucide-react";
 import { useTheme } from "next-themes";
-import { useEffect, useState } from "react";
+import { useIsClient } from "@/lib/use-is-client";
 
 const ThemeSwitcher = () => {
-  const [mounted, setMounted] = useState(false);
+  // 서버 렌더링에서는 테마를 알 수 없으므로 클라이언트에서만 UI를 그린다
+  const mounted = useIsClient();
   const { theme, setTheme } = useTheme();
-
-  // useEffect only runs on the client, so now we can safely show the UI
-  useEffect(() => {
-    setMounted(true);
-  }, []);
 
   if (!mounted) {
     return null;

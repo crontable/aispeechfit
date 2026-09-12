@@ -1,6 +1,5 @@
 'use client';
 
-import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { AlertTriangle, ExternalLink, Smartphone } from 'lucide-react';
 import {
@@ -9,27 +8,24 @@ import {
   isIOS,
   openInExternalBrowser,
 } from '@/utils/browser-detection';
+import { useIsClient } from '@/lib/use-is-client';
 
 interface InAppBrowserWarningProps {
   onClose?: () => void;
 }
 
+type Platform = 'android' | 'ios' | 'other';
+
+const detectPlatform = (): Platform => {
+  if (isAndroid()) return 'android';
+  if (isIOS()) return 'ios';
+  return 'other';
+};
+
 export default function InAppBrowserWarning({ onClose }: InAppBrowserWarningProps) {
-  const [isInApp, setIsInApp] = useState(false);
-  const [platform, setPlatform] = useState<'android' | 'ios' | 'other'>('other');
-
-  useEffect(() => {
-    const inAppResult = isInAppBrowser();
-    setIsInApp(inAppResult);
-
-    if (isAndroid()) {
-      setPlatform('android');
-    } else if (isIOS()) {
-      setPlatform('ios');
-    } else {
-      setPlatform('other');
-    }
-  }, []);
+  const isClient = useIsClient();
+  const isInApp = isClient && isInAppBrowser();
+  const platform: Platform = isClient ? detectPlatform() : 'other';
 
   const handleOpenExternalBrowser = () => {
     openInExternalBrowser();
