@@ -62,7 +62,7 @@ async function resolveUser(kind) {
   const email = process.env[`EMAIL_${kind}`];
   const password = process.env[`PASSWORD_${kind}`];
   if (email && password) return signIn(email, password);
-  throw new Error(`TOKEN_${kind} 또는 EMAIL_${kind}/PASSWORD_${kind} 환경변수가 필요하다`);
+  return null; // 이 역할의 검사는 건너뛴다
 }
 
 function rest(path, { token, method = 'GET', body } = {}) {
@@ -82,10 +82,21 @@ let usersPromise;
 function users() {
   usersPromise ??= (async () => {
     const [noTicket, activeTicket] = await Promise.all([resolveUser('NO_TICKET'), resolveUser('ACTIVE_TICKET')]);
-    assert.notEqual(noTicket.userId, activeTicket.userId, '두 검증 계정이 같은 사용자다');
+    if (noTicket && activeTicket) assert.notEqual(noTicket.userId, activeTicket.userId, '두 검증 계정이 같은 사용자다');
     return { noTicket, activeTicket };
   })();
   return usersPromise;
+}
+
+// 필요한 사용자 토큰이 없으면 검사를 건너뛴다.
+async function need(t, ...kinds) {
+  const u = await users();
+  const missing = kinds.filter((k) => !u[k]);
+  if (missing.length) {
+    t.skip(`${missing.join(', ')} 토큰 없음`);
+    return null;
+  }
+  return u;
 }
 
 // --- anon -----------------------------------------------------------------
@@ -108,24 +119,27 @@ test('anon: has_active_ticket RPC는 권한 오류', async () => {
 
 // --- 이용권 없는 사용자 ---------------------------------------------------
 
-test('이용권 없음: 본인 tickets만 반환', async () => {
-  const { noTicket } = await users();
+test('이용권 없음: 본인 tickets만 반환', async (t) => {
+  const u = await need(t, 'noTicket'); if (!u) return;
+  const { noTicket } = u;
   const res = await rest('tickets?select=id,user_id', { token: noTicket.token });
   assert.equal(res.status, 200);
   const rows = await res.json();
   assert.ok(rows.every((r) => r.user_id === noTicket.userId), '남의 이용권 행이 섞였다');
 });
 
-test('이용권 없음: 남의 user_id로 필터해도 0행', async () => {
-  const { noTicket, activeTicket } = await users();
+test('이용권 없음: 남의 user_id로 필터해도 0행', async (t) => {
+  const u = await need(t, 'noTicket', 'activeTicket'); if (!u) return;
+  const { noTicket, activeTicket } = u;
   const res = await rest(`tickets?select=id&user_id=eq.${activeTicket.userId}`, { token: noTicket.token });
   assert.equal(res.status, 200);
   assert.deepEqual(await res.json(), []);
 });
 
 for (const table of LEARNING) {
-  test(`이용권 없음: ${table}은 200이지만 0행`, async () => {
-    const { noTicket } = await users();
+  test(`이용권 없음: ${table}은 200이지만 0행`, async (t) => {
+    const u = await need(t, 'noTicket'); if (!u) return;
+  const { noTicket } = u;
     const res = await rest(`${table}?select=id&limit=5`, { token: noTicket.token });
     assert.equal(res.status, 200);
     assert.deepEqual(await res.json(), []);
@@ -134,8 +148,9 @@ for (const table of LEARNING) {
 
 // --- 유효 이용권 사용자 ---------------------------------------------------
 
-test('유효 이용권: 본인 tickets에 유효 행이 있다', async () => {
-  const { activeTicket } = await users();
+test('유효 이용권: 본인 tickets에 유효 행이 있다', async (t) => {
+  const u = await need(t, 'activeTicket'); if (!u) return;
+  const { activeTicket } = u;
   const res = await rest('tickets?select=id,user_id,is_active,started_at,expires_at', { token: activeTicket.token });
   assert.equal(res.status, 200);
   const rows = await res.json();
@@ -148,16 +163,18 @@ test('유효 이용권: 본인 tickets에 유효 행이 있다', async () => {
   );
 });
 
-test('유효 이용권: 남의 user_id로 필터하면 0행', async () => {
-  const { noTicket, activeTicket } = await users();
+test('유효 이용권: 남의 user_id로 필터하면 0행', async (t) => {
+  const u = await need(t, 'noTicket', 'activeTicket'); if (!u) return;
+  const { noTicket, activeTicket } = u;
   const res = await rest(`tickets?select=id&user_id=eq.${noTicket.userId}`, { token: activeTicket.token });
   assert.equal(res.status, 200);
   assert.deepEqual(await res.json(), []);
 });
 
 for (const table of LEARNING) {
-  test(`유효 이용권: ${table}에서 행이 반환된다`, async () => {
-    const { activeTicket } = await users();
+  test(`유효 이용권: ${table}에서 행이 반환된다`, async (t) => {
+    const u = await need(t, 'activeTicket'); if (!u) return;
+  const { activeTicket } = u;
     const res = await rest(`${table}?select=id&limit=5`, { token: activeTicket.token });
     assert.equal(res.status, 200);
     const rows = await res.json();
@@ -169,31 +186,39 @@ for (const table of LEARNING) {
 
 for (const user of ['noTicket', 'activeTicket']) {
   const label = user === 'noTicket' ? '이용권 없음' : '유효 이용권';
-  const token = async () => (await users())[user].token;
+  const token = async (t) => {
+    const u = await need(t, user);
+    return u && u[user].token;
+  };
 
-  test(`${label}: books INSERT는 권한 오류`, async () => {
-    const res = await rest('books', { token: await token(), method: 'POST', body: { title: 'x' } });
+  test(`${label}: books INSERT는 권한 오류`, async (t) => {
+    const tk = await token(t); if (!tk) return;
+    const res = await rest('books', { token: tk, method: 'POST', body: { title: 'x' } });
     await expectPermissionDenied(res, `${label} insert books`);
   });
 
-  test(`${label}: books UPDATE는 권한 오류`, async () => {
-    const res = await rest('books?id=gt.0', { token: await token(), method: 'PATCH', body: { title: 'x' } });
+  test(`${label}: books UPDATE는 권한 오류`, async (t) => {
+    const tk = await token(t); if (!tk) return;
+    const res = await rest('books?id=gt.0', { token: tk, method: 'PATCH', body: { title: 'x' } });
     await expectPermissionDenied(res, `${label} update books`);
   });
 
-  test(`${label}: books DELETE는 권한 오류`, async () => {
-    const res = await rest('books?id=gt.0', { token: await token(), method: 'DELETE' });
+  test(`${label}: books DELETE는 권한 오류`, async (t) => {
+    const tk = await token(t); if (!tk) return;
+    const res = await rest('books?id=gt.0', { token: tk, method: 'DELETE' });
     await expectPermissionDenied(res, `${label} delete books`);
   });
 
-  test(`${label}: tickets INSERT는 권한 오류`, async () => {
+  test(`${label}: tickets INSERT는 권한 오류`, async (t) => {
+    const tk = await token(t); if (!tk) return;
     const body = { user_id: (await users())[user].userId, expires_at: '2099-01-01T00:00:00Z' };
-    const res = await rest('tickets', { token: await token(), method: 'POST', body });
+    const res = await rest('tickets', { token: tk, method: 'POST', body });
     await expectPermissionDenied(res, `${label} insert tickets`);
   });
 
-  test(`${label}: tickets UPDATE는 권한 오류`, async () => {
-    const res = await rest('tickets?id=gt.0', { token: await token(), method: 'PATCH', body: { expires_at: '2099-01-01T00:00:00Z' } });
+  test(`${label}: tickets UPDATE는 권한 오류`, async (t) => {
+    const tk = await token(t); if (!tk) return;
+    const res = await rest('tickets?id=gt.0', { token: tk, method: 'PATCH', body: { expires_at: '2099-01-01T00:00:00Z' } });
     await expectPermissionDenied(res, `${label} update tickets`);
   });
 }
