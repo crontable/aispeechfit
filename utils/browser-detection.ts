@@ -220,6 +220,8 @@ export function getBrowserInfo() {
     return {
       isInApp: false,
       isMobile: false,
+      isAndroid: false,
+      isIOS: false,
       platform: 'server',
       userAgent: '',
     };

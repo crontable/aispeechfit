@@ -1,18 +1,17 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { getBrowserInfo, openInExternalBrowser } from '@/utils/browser-detection';
+import { useIsClient } from '@/lib/use-is-client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { ExternalLink, Smartphone, Monitor, AlertTriangle } from 'lucide-react';
 
 export default function TestBrowserPage() {
-  const [browserInfo, setBrowserInfo] = useState<any>(null);
-
-  useEffect(() => {
-    setBrowserInfo(getBrowserInfo());
-  }, []);
+  const router = useRouter();
+  const isClient = useIsClient();
+  const browserInfo = isClient ? getBrowserInfo() : null;
 
   if (!browserInfo) {
     return (
@@ -122,7 +121,7 @@ export default function TestBrowserPage() {
 
         <div className="text-center">
           <Button 
-            onClick={() => window.location.assign('/sign-in')}
+            onClick={() => router.push('/sign-in')}
             variant="outline"
           >
             로그인 페이지로 이동

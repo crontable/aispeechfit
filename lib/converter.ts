@@ -28,7 +28,14 @@ export function convertBooks({ bookDTOs, chapterDTOs }: { bookDTOs: BookDTO[]; c
   });
 }
 
-export function convertToReversibleCardQuestions(questions: any[]): IQuestion[] {
+/** questions 테이블 행. priority는 문자열로 올 수 있고 keyword·mainKeyword는 열 이름이 단수다. */
+type QuestionRow = Omit<IQuestion, 'priority' | 'keywords' | 'mainKeywords'> & {
+  priority?: number | string | null;
+  keyword?: string[] | null;
+  mainKeyword?: string[] | null;
+};
+
+export function convertToReversibleCardQuestions(questions: QuestionRow[]): IQuestion[] {
   return questions.map(question => ({
     ...question,
     // priority가 string이면 숫자로 변환, 없거나 빈 문자열이면 0으로 설정
