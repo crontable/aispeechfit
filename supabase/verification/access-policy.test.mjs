@@ -9,6 +9,8 @@
 //   SUPABASE_URL, SUPABASE_KEY   프로젝트 주소와 publishable 키 (.env.local의 NEXT_PUBLIC_* 값)
 //   TOKEN_NO_TICKET              유효 이용권이 없는 사용자의 access token
 //   TOKEN_ACTIVE_TICKET          유효 이용권이 있는 사용자의 access token
+//   두 값에는 JWT 대신 브라우저 쿠키 sb-<ref>-auth-token 원문을 넣어도 된다.
+//   쿠키가 .0, .1로 나뉘어 있으면 두 값을 공백 없이 이어 붙인다. base64- 접두어는 있어도 된다.
 //   토큰 대신 EMAIL_NO_TICKET/PASSWORD_NO_TICKET, EMAIL_ACTIVE_TICKET/PASSWORD_ACTIVE_TICKET을 주면
 //   이메일 로그인으로 토큰을 받는다. 프로젝트에 Email 로그인이 켜져 있어야 한다.
 //   토큰은 브라우저 개발자 도구 → Application → Cookies의 sb-*-auth-token에서 꺼낼 수 있다.
@@ -39,10 +41,22 @@ async function signIn(email, password) {
   return { token: body.access_token, userId: body.user.id };
 }
 
+// JWT면 그대로, 쿠키 원문이면 풀어서 access_token만 꺼낸다.
+function accessTokenFrom(value) {
+  const v = value.trim();
+  if (v.split('.').length === 3) return v;
+  const raw = v.replace(/^base64-/, '');
+  const session = JSON.parse(Buffer.from(raw, 'base64url').toString());
+  if (!session.access_token) throw new Error('쿠키 값에서 access_token을 찾지 못했다');
+  return session.access_token;
+}
+
 async function resolveUser(kind) {
-  const token = process.env[`TOKEN_${kind}`];
-  if (token) {
+  const value = process.env[`TOKEN_${kind}`];
+  if (value) {
+    const token = accessTokenFrom(value);
     const payload = JSON.parse(Buffer.from(token.split('.')[1], 'base64url').toString());
+    if (payload.exp * 1000 < Date.now()) throw new Error(`TOKEN_${kind}이 만료됐다. 페이지를 새로 고쳐 다시 꺼낸다`);
     return { token, userId: payload.sub };
   }
   const email = process.env[`EMAIL_${kind}`];
@@ -83,7 +97,7 @@ for (const table of TABLES) {
 }
 
 test('anon: books INSERT는 권한 오류', async () => {
-  const res = await rest('books', { method: 'POST', body: { title: 'x', pub_year: 2000 } });
+  const res = await rest('books', { method: 'POST', body: { title: 'x' } });
   await expectPermissionDenied(res, 'anon insert books');
 });
 
@@ -158,7 +172,7 @@ for (const user of ['noTicket', 'activeTicket']) {
   const token = async () => (await users())[user].token;
 
   test(`${label}: books INSERT는 권한 오류`, async () => {
-    const res = await rest('books', { token: await token(), method: 'POST', body: { title: 'x', pub_year: 2000 } });
+    const res = await rest('books', { token: await token(), method: 'POST', body: { title: 'x' } });
     await expectPermissionDenied(res, `${label} insert books`);
   });
 
