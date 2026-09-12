@@ -86,7 +86,7 @@ If you wish to just develop locally and not deploy to Vercel, [follow the steps 
 
    Both `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_KEY` can be found in [your Supabase project's API settings](https://app.supabase.com/project/_/settings/api)
 
-5. Node.js 22 이상이 필요하다. `package.json`의 `engines.node`와 `.nvmrc`에 적어 두었다. nvm을 쓰면 다음 명령으로 맞춘다.
+5. Node.js 24 이상이 필요하다. `package.json`의 `engines.node`와 `.nvmrc`에 적어 두었다. nvm을 쓰면 다음 명령으로 맞춘다.
 
    ```bash
    nvm use
