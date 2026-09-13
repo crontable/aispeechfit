@@ -1,34 +1,15 @@
-export interface BookDTO {
-  id: number;
-  title: string;
-  pub_year: number;
-  created_at: Date;
-  updated_at: Date;
-}
+import type { Tables } from './database.types';
 
-export interface ChapterDTO {
-  id: number;
-  book_id: number;
-  title: string;
-  sort_order: number;
-  created_at: Date;
-  updated_at: Date;
-}
+// DB 행 타입. 손으로 적지 않고 생성 타입에서 가져온다. 열이 바뀌면 여기를 읽는 코드가 컴파일에서 걸린다.
+export type BookDTO = Tables<'books'>;
+export type ChapterDTO = Tables<'chapters'>;
+export type QuestionDTO = Tables<'questions'>;
 
-export interface QuestionDTO {
-  id: number;
-  chapter_id: number;
-  question: string;
-  answer: string;
-  score: number;
-  created_at: Date;
-  updated_at: Date;
-}
-
+// 화면용 타입. 날짜는 JSON 응답 그대로 ISO 문자열이다.
 export interface CommonRecord {
   id: number;
-  createdAt: Date;
-  updatedAt: Date;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface Book extends CommonRecord {

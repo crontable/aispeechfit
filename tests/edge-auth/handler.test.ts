@@ -72,3 +72,94 @@ test('oversized login bodies are rejected before initializing auth', async () =>
   assert.equal((await handler(request('/api/auth/sign-in/social', { provider: 'kakao', padding: 'x'.repeat(17000) }))).status, 413);
   assert.equal(calls(), 0);
 });
+
+test('retired phone verification endpoints stop before runtime or provider access', async () => {
+  let runtimes = 0;
+  const handler = createServiceHandler(() => { runtimes++; throw new Error('Must not initialize dependencies'); }, options);
+  for (const path of ['/api/kakao/verify', '/api/dev/kakao/verify']) {
+    for (const req of [request(path), request(path, {}), request(path + '?user=forged', {})]) {
+      const response = await handler(req);
+      assert.equal(response.status, 404); assert.deepEqual(await response.json(), { error: 'not_found' });
+      assert.equal(response.headers.get('cache-control'), 'no-store');
+    }
+  }
+  assert.equal(runtimes, 0);
+});
+
+test('phone-free access follows session, ticket and learning queries with safe error states', async (t) => {
+  const { createClient } = await import('@supabase/supabase-js');
+  const user = { id: '11111111-1111-4111-8111-111111111111', name: 'Fixture', email: 'fixture@example.com', image: null };
+  let session: { user: typeof user } | null = { user };
+  let ticket: unknown = true, serviceFailure = false, missingChapter = false, limited = false;
+  const events: string[] = [], queries: URL[] = [];
+  const client = createClient('https://project.supabase.co', 'sb_publishable_fixture', {
+    auth: { persistSession: false, autoRefreshToken: false },
+    global: { fetch: async (input, init) => {
+      const url = new URL(new Request(input, init).url); queries.push(url);
+      if (url.pathname.endsWith('/rpc/has_active_ticket')) {
+        events.push('ticket');
+        return serviceFailure ? new Response(null, { status: 503 }) : Response.json(ticket);
+      }
+      events.push('learning');
+      if (url.pathname.endsWith('/books')) return Response.json([{ id: 1, title: 'Fixture book' }]);
+      if (url.pathname.endsWith('/chapters')) return Response.json(missingChapter ? [] : [{ id: 2, book_id: 1 }]);
+      if (url.pathname.endsWith('/questions')) return Response.json([{ id: 3, chapter_id: 2 }]);
+      throw new Error('Unexpected data request');
+    } },
+  });
+  const runtime = {
+    limit: async (key: string, max: number) => { assert.equal(key, 'service'); assert.equal(max, 600); return !limited; },
+    auth: { api: { getSession: async () => { events.push('session'); return session; } } },
+    data: async () => { events.push('data'); return client; },
+  } as unknown as EdgeRuntime;
+  const handler = createServiceHandler(() => runtime, options);
+  const invoke = async (path: string) => { events.length = 0; queries.length = 0; return handler(request(path)); };
+  await t.test('active session and ticket return access and books with no phone dependency', async () => {
+    const access = await invoke('/api/service/access');
+    assert.deepEqual(await access.json(), { state: 'active', user });
+    assert.deepEqual(events, ['session', 'data', 'ticket']);
+    const books = await invoke('/api/service/books'); assert.equal(books.status, 200);
+    assert.deepEqual(await books.json(), { books: [{ id: 1, title: 'Fixture book' }], chapters: [{ id: 2, book_id: 1 }] });
+    assert.deepEqual(events, ['session', 'data', 'ticket', 'learning', 'learning']);
+    assert.equal(books.headers.get('cache-control'), 'no-store');
+  });
+  await t.test('chapter membership and question ordering reach the real data client', async () => {
+    const response = await invoke('/api/service/books/1/chapters/2'); assert.equal(response.status, 200);
+    assert.deepEqual(await response.json(), { chapter: { id: 2, book_id: 1 }, questions: [{ id: 3, chapter_id: 2 }] });
+    const chapter = queries.find(url => url.pathname.endsWith('/chapters'))!;
+    assert.equal(chapter.searchParams.get('book_id'), 'eq.1'); assert.equal(chapter.searchParams.get('id'), 'eq.2');
+    const questions = queries.find(url => url.pathname.endsWith('/questions'))!;
+    assert.equal(questions.searchParams.get('chapter_id'), 'eq.2');
+    assert.equal(questions.searchParams.get('order'), 'sort_order.asc,id.asc');
+    missingChapter = true;
+    assert.equal((await invoke('/api/service/books/1/chapters/2')).status, 404);
+    assert.equal(queries.some(url => url.pathname.endsWith('/questions')), false); missingChapter = false;
+  });
+  await t.test('missing ticket denies data while a missing session avoids the data client entirely', async () => {
+    ticket = false;
+    assert.deepEqual(await (await invoke('/api/service/access')).json(), { state: 'no_ticket', user });
+    const denied = await invoke('/api/service/books'); assert.equal(denied.status, 403);
+    assert.deepEqual(await denied.json(), { error: 'ticket_required' }); assert.ok(!events.includes('learning'));
+    session = null;
+    assert.deepEqual(await (await invoke('/api/service/access')).json(), { state: 'anonymous' });
+    assert.equal((await invoke('/api/service/books')).status, 401);
+    assert.deepEqual(events, ['session']); session = { user }; ticket = true;
+  });
+  await t.test('dependency failures and invalid RPC responses stay distinct from missing tickets', async () => {
+    const previous = console.error; console.error = () => {};
+    try {
+      for (const value of [null, 'true']) {
+        ticket = value; const response = await invoke('/api/service/access');
+        assert.equal(response.status, 503); assert.equal((await response.json()).error, 'service_unavailable');
+      }
+      serviceFailure = true;
+      assert.equal((await invoke('/api/service/books')).status, 503);
+      assert.ok(!events.includes('learning'));
+    } finally { console.error = previous; serviceFailure = false; ticket = true; }
+  });
+  await t.test('shared request limits still stop requests before session or data access', async () => {
+    limited = true; const response = await invoke('/api/service/books');
+    assert.equal(response.status, 429); assert.equal(response.headers.get('retry-after'), '60');
+    assert.deepEqual(events, []);
+  });
+});

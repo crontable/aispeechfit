@@ -7,7 +7,7 @@ export function isKakaoTestEnabled(env = process.env) {
 }
 
 export function missingKakaoSettings(env = process.env) {
-  return ['BETTER_AUTH_SECRET', 'KAKAO_CLIENT_ID', 'KAKAO_CLIENT_SECRET', 'KAKAO_APP_ID', 'KAKAO_TEST_DATABASE_URL']
+  return ['BETTER_AUTH_SECRET', 'KAKAO_CLIENT_ID', 'KAKAO_CLIENT_SECRET', 'KAKAO_TEST_DATABASE_URL']
     .filter((key) => !env[key]?.trim());
 }
 
@@ -15,7 +15,6 @@ export function getKakaoTestConfig(env = process.env) {
   if (!isKakaoTestEnabled(env)) throw new Error('Kakao development verification is disabled.');
   if (missingKakaoSettings(env).length) throw new Error('Kakao development settings are incomplete.');
   if (env.BETTER_AUTH_SECRET!.length < 32) throw new Error('BETTER_AUTH_SECRET must contain at least 32 characters.');
-  if (!/^\d+$/.test(env.KAKAO_APP_ID!)) throw new Error('KAKAO_APP_ID must be numeric.');
   const databaseUrl = new URL(env.KAKAO_TEST_DATABASE_URL!);
   if (!['postgres:', 'postgresql:'].includes(databaseUrl.protocol)
     || !['localhost', '127.0.0.1'].includes(databaseUrl.hostname)
@@ -25,7 +24,7 @@ export function getKakaoTestConfig(env = process.env) {
   }
   return {
     secret: env.BETTER_AUTH_SECRET!, clientId: env.KAKAO_CLIENT_ID!,
-    clientSecret: env.KAKAO_CLIENT_SECRET!, appId: env.KAKAO_APP_ID!,
+    clientSecret: env.KAKAO_CLIENT_SECRET!,
     databaseUrl: databaseUrl.toString(),
   };
 }

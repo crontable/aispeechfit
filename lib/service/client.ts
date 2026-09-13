@@ -5,7 +5,7 @@ import { serviceCookie } from './transport.ts';
 import type { BookDTO, ChapterDTO, QuestionDTO } from '@/domain/types';
 
 export type ServiceUser = { id: string; name: string; email: string; image: string | null };
-export type ServiceAccess = { state: 'anonymous' } | { state: 'phone_pending' | 'active' | 'no_ticket'; user: ServiceUser };
+export type ServiceAccess = { state: 'anonymous' } | { state: 'active' | 'no_ticket'; user: ServiceUser };
 export class ServiceError extends Error {
   status: number;
   constructor(status: number) { super('Service request failed'); this.status = status; }
@@ -27,8 +27,10 @@ async function requestService<T>(path: string): Promise<T> {
 
 export async function readServiceAccess() {
   const result = await requestService<ServiceAccess>('/api/service/access');
-  if (!result || !['anonymous', 'phone_pending', 'active', 'no_ticket'].includes(result.state)
-    || (result.state !== 'anonymous' && (!result.user || typeof result.user.email !== 'string'))) throw new ServiceError(503);
+  if (!result || !['anonymous', 'active', 'no_ticket'].includes(result.state)
+    || (result.state !== 'anonymous' && (!result.user || typeof result.user.id !== 'string'
+      || typeof result.user.name !== 'string' || typeof result.user.email !== 'string'
+      || (result.user.image !== null && typeof result.user.image !== 'string')))) throw new ServiceError(503);
   return result;
 }
 

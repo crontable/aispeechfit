@@ -1,6 +1,7 @@
 import { betterAuth } from "better-auth";
 import type { Pool } from "pg";
 import { authSchemaOptions } from "./schema-options.ts";
+import { kakaoLoginOptions } from "./kakao-profile.ts";
 
 export type KakaoAuthConfig = {
   secret: string;
@@ -21,8 +22,7 @@ export function createKakaoAuth(pool: Pool, config: KakaoAuthConfig) {
       kakao: {
         clientId: config.clientId,
         clientSecret: config.clientSecret,
-        disableDefaultScope: true,
-        scope: ["account_email", "profile_nickname", "phone_number"],
+        ...kakaoLoginOptions,
       },
     },
     session: { ...authSchemaOptions.session, expiresIn: 60 * 60 },

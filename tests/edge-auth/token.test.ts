@@ -26,11 +26,12 @@ test('Web Crypto emits a valid JOSE ES256 signature and preserves session-bound 
 test('Edge configuration requires least-privileged roles and rejects an admin Data API key', () => {
   const env = {
     AUTH_DATABASE_URL: 'postgres://better_auth_runtime.project:fixture@aws.pooler.supabase.com:5432/postgres',
-    AUTH_PHONE_DATABASE_URL: 'postgres://better_auth_phone_writer.project:fixture@aws.pooler.supabase.com:5432/postgres',
-    BETTER_AUTH_SECRET: 'x'.repeat(48), KAKAO_CLIENT_ID: 'fixture', KAKAO_CLIENT_SECRET: 'fixture', KAKAO_APP_ID: '1',
+    BETTER_AUTH_SECRET: 'x'.repeat(48), KAKAO_CLIENT_ID: 'fixture', KAKAO_CLIENT_SECRET: 'fixture',
     DATA_API_SIGNING_JWK: '{}', DATA_API_URL: 'https://project.supabase.co', DATA_API_PUBLIC_KEY: 'sb_publishable_fixture',
   };
-  assert.equal(readEdgeConfig(env, 'https://fixture.example').appId, '1');
+  assert.equal('appId' in readEdgeConfig(env, 'https://fixture.example'), false);
+  assert.equal('phoneDatabaseUrl' in readEdgeConfig(env, 'https://fixture.example'), false);
+  assert.deepEqual(readEdgeConfig({ ...env, AUTH_PHONE_DATABASE_URL: 'retired-and-invalid', KAKAO_APP_ID: 'retired-and-invalid' }, 'https://fixture.example'), readEdgeConfig(env, 'https://fixture.example'));
   assert.throws(() => readEdgeConfig({ ...env, AUTH_DATABASE_URL: env.AUTH_DATABASE_URL.replace('better_auth_runtime', 'postgres') }, 'https://fixture.example'));
   assert.throws(() => readEdgeConfig({ ...env, DATA_API_PUBLIC_KEY: 'sb_secret_private' }, 'https://fixture.example'));
   assert.throws(() => readEdgeConfig(env, 'http://fixture.example'));

@@ -1,5 +1,6 @@
 import { betterAuth } from 'better-auth';
 import { Pool } from 'pg';
+import { kakaoLoginOptions } from '../../supabase/functions/_shared/auth/kakao-profile.ts';
 import { AUTH_SCHEMA, TEST_ORIGIN, type KakaoTestConfig } from './config.ts';
 
 export function createKakaoTestPool(config: Pick<KakaoTestConfig, 'databaseUrl'>) {
@@ -20,8 +21,7 @@ export function createKakaoTestAuth(pool: Pool, config: KakaoTestConfig) {
     socialProviders: {
       kakao: {
         clientId: config.clientId, clientSecret: config.clientSecret,
-        disableDefaultScope: true,
-        scope: ['account_email', 'profile_nickname', 'phone_number'],
+        ...kakaoLoginOptions,
       },
     },
     account: {
@@ -33,7 +33,7 @@ export function createKakaoTestAuth(pool: Pool, config: KakaoTestConfig) {
       database: { generateId: 'uuid' },
       cookiePrefix: 'aispeechfit-kakao-test',
     },
-    // 전화번호 조회용 토큰은 서버 API에서만 다룬다.
+    // 제공자 토큰과 계정 연결 API는 공개하지 않는다.
     disabledPaths: ['/get-access-token', '/refresh-token', '/account-info', '/link-social', '/unlink-account'],
     logger: { disabled: true },
     telemetry: { enabled: false },

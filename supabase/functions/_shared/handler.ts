@@ -1,5 +1,3 @@
-import { KakaoVerificationError } from './auth/phone.ts';
-import { readKakaoStatus, verifyCurrentKakaoSession } from './auth/kakao-verification.ts';
 import { copyServiceResponse, isServiceRoute, readLimitedBody, serviceJson } from './http.ts';
 import type { EdgeRuntime } from './runtime.ts';
 
@@ -77,18 +75,7 @@ export function createServiceHandler(getRuntime: () => EdgeRuntime, options: Opt
       const session = await runtime.auth.api.getSession({ headers: request.headers });
       if (!session) return path === '/api/service/access'
         ? serviceJson({ state: 'anonymous' }) : serviceJson({ error: 'session_expired' }, 401);
-      if (path === '/api/kakao/verify') {
-        if (body?.length) return serviceJson({ errorCode: 'body_not_allowed' }, 400);
-        if (!await runtime.limit('phone:' + session.user.id, 10)) return serviceJson({ errorCode: 'rate_limited' }, 429);
-        stage = 'phone_verification';
-        const result = await verifyCurrentKakaoSession(runtime, request.headers);
-        return serviceJson({ sessionChecked: result.sessionChecked, errorCode: result.errorCode }, result.errorCode ? 422 : 200);
-      }
-      stage = 'phone_status';
-      const phone = await readKakaoStatus(runtime.pool, session);
       const user = { id: session.user.id, name: session.user.name, email: session.user.email, image: session.user.image ?? null };
-      if (!phone.sessionChecked) return path === '/api/service/access'
-        ? serviceJson({ state: 'phone_pending', user }) : serviceJson({ error: 'phone_required' }, 403);
       stage = 'ticket';
       const data = await runtime.data(session);
       const ticket = await data.rpc('has_active_ticket');
@@ -115,7 +102,6 @@ export function createServiceHandler(getRuntime: () => EdgeRuntime, options: Opt
       if (questions.error) throw new Error('DATA_UNAVAILABLE');
       return serviceJson({ chapter: chapter.data, questions: questions.data });
     } catch (error) {
-      if (error instanceof KakaoVerificationError) return serviceJson({ errorCode: error.code }, error.code === 'session_expired' ? 401 : 422);
       if (error instanceof Error && error.message === 'BODY_TOO_LARGE') return serviceJson({ error: 'body_too_large' }, 413);
       // Never log the thrown error: database/OAuth errors can contain credentials or personal data.
       const known = ['EDGE_SIGNING_KEY_INVALID', 'EDGE_CONFIG_MISSING', 'EDGE_CONFIG_INVALID', 'EDGE_DB_CONFIG_INVALID',

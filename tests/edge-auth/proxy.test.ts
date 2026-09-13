@@ -61,3 +61,15 @@ test('production proxy configuration needs public URLs only and refuses arbitrar
     assert.throws(() => getServiceConfig({ ...env, AUTH_FUNCTION_URL: url }));
   }
 });
+
+test('removed verification paths never reach Edge through the proxy', async () => {
+  let calls = 0;
+  const upstream: typeof fetch = async () => { calls++; throw new Error('Must not reach Edge'); };
+  for (const path of ['/api/kakao/verify', '/api/dev/kakao/verify']) {
+    const response = await forwardServiceRequest(new Request(config.origin + path, {
+      method: 'POST', headers: { origin: config.origin }, body: '{}',
+    }), upstream, config);
+    assert.equal(response.status, 404); assert.deepEqual(await response.json(), { error: 'not_found' });
+  }
+  assert.equal(calls, 0);
+});
