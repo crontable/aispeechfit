@@ -42,6 +42,20 @@ test('proxy accepts only the pinned Netlify deployment alias and keeps browser O
   assert.equal(calls, 1);
 });
 
+test('허용된 로그인 오류 복귀를 처리하고 인증값·상세 오류를 URL에 남기지 않는다', async () => {
+  const upstream: typeof fetch = async () => new Response(null, {
+    status: 302, headers: { location: config.origin + '/sign-in?error=login&error=invalid_code&code=private&state=private&error_description=private' },
+  });
+  const response = await forwardServiceRequest(new Request(config.origin + '/api/auth/callback/kakao?code=private&state=private'), upstream, config);
+  const html = await response.text();
+  assert.equal(response.status, 200);
+  assert.match(html, /url=https:\/\/fixture.example\/sign-in\?error=invalid_code/);
+  assert.doesNotMatch(html, /private|error_description|state=/);
+  assert.equal(response.headers.get('location'), null);
+  const outside: typeof fetch = async () => new Response(null, { status: 302, headers: { location: 'https://attacker.example/sign-in?error=login' } });
+  assert.equal((await forwardServiceRequest(new Request(config.origin + '/api/auth/callback/kakao'), outside, config)).status, 503);
+});
+
 test('proxy rejects forged host/origin and exposes only safe errors on upstream failure', async () => {
   let calls = 0;
   const fail: typeof fetch = async () => { calls++; throw new Error('private upstream diagnostic'); };

@@ -40,11 +40,18 @@ export async function forwardServiceRequest(request: Request, fetchService = fet
     // An explicit HTML refresh navigates to the exact clean URL, with no scripts.
     if (url.pathname === '/api/auth/callback/kakao' && forwarded.status === 302) {
       const target = new URL(forwarded.headers.get('location') ?? '', config.origin);
-      if (target.origin !== config.origin || !['/auth/complete', '/api/auth/error'].includes(target.pathname)) {
+      if (target.origin !== config.origin || !['/auth/complete', '/api/auth/error', '/sign-in'].includes(target.pathname)) {
         return serviceJson({ error: 'service_unavailable' }, 503);
       }
       target.searchParams.delete('code');
       target.searchParams.delete('state');
+      if (target.pathname === '/sign-in') {
+        const reported = target.searchParams.getAll('error').at(-1) ?? 'login';
+        const code = /^[a-z_]{1,64}$/.test(reported) ? reported : 'login';
+        target.search = '';
+        target.searchParams.set('error', code);
+        console.error(JSON.stringify({ event: 'oauth_callback_error', code }));
+      }
       const href = target.href.replaceAll('&', '&amp;').replaceAll('"', '&quot;').replaceAll('<', '&lt;').replaceAll('>', '&gt;');
       forwarded.headers.delete('location');
       forwarded.headers.set('content-type', 'text/html; charset=utf-8');
