@@ -1,0 +1,3 @@
+[functions.service-auth-v1]
+verify_jwt = false
+entrypoint = "./functions/service-auth-v1/index.ts"
