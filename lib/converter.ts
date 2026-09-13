@@ -1,8 +1,8 @@
-import { BookDTO, ChapterDTO, Book, Chapter } from '@/domain/types';
+import { BookDTO, ChapterDTO, QuestionDTO, Book, Chapter } from '@/domain/types';
 import { IQuestion } from '@/components/ReversibleCard';
 
 export function convertBooks({ bookDTOs, chapterDTOs }: { bookDTOs: BookDTO[]; chapterDTOs: ChapterDTO[] }): Book[] {
-  return bookDTOs.map(({ id, title, pub_year, created_at, updated_at }) => {
+  return bookDTOs.map(({ id, title, published_year, created_at, updated_at }) => {
     const chapters: Chapter[] =
       chapterDTOs
         ?.filter((chapterDTO) => chapterDTO.book_id === id)
@@ -20,7 +20,7 @@ export function convertBooks({ bookDTOs, chapterDTOs }: { bookDTOs: BookDTO[]; c
     return {
       id,
       title,
-      publishedYear: pub_year,
+      publishedYear: published_year,
       createdAt: created_at,
       updatedAt: updated_at,
       chapters,
@@ -28,23 +28,18 @@ export function convertBooks({ bookDTOs, chapterDTOs }: { bookDTOs: BookDTO[]; c
   });
 }
 
-/** questions 테이블 행. priority는 문자열로 올 수 있고 keyword·mainKeyword는 열 이름이 단수다. */
-type QuestionRow = Omit<IQuestion, 'priority' | 'keywords' | 'mainKeywords'> & {
-  priority?: number | string | null;
-  keyword?: string[] | null;
-  mainKeyword?: string[] | null;
-};
-
-export function convertToReversibleCardQuestions(questions: QuestionRow[]): IQuestion[] {
+export function convertToReversibleCardQuestions(questions: QuestionDTO[]): IQuestion[] {
   return questions.map(question => ({
     ...question,
+    // ReversibleCard는 answer를 문자열로 받는다. DB의 null은 빈 문자열로 넘긴다.
+    answer: question.answer ?? '',
+    score: question.score ?? undefined,
     // priority가 string이면 숫자로 변환, 없거나 빈 문자열이면 0으로 설정
     priority: question.priority ? 
       (typeof question.priority === 'number' ? question.priority : parseInt(question.priority) || 0) : 
       0,
-    // keywords를 mainKeywords로 변환 (필요한 경우)
-    keywords: question.keyword || [],
-    mainKeywords: question.mainKeyword || [],
-    // 다른 필드들은 기존 형태 유지
+    // questions 테이블에 keyword·mainKeyword 열이 없다. 이전에도 undefined를 빈 배열로 바꿔 넘겼다.
+    keywords: [],
+    mainKeywords: [],
   }));
 }

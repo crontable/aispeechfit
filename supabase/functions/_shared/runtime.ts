@@ -3,6 +3,7 @@ import { createClient } from '@supabase/supabase-js';
 import { createKakaoAuth } from './auth/kakao.ts';
 import { SUPABASE_CA } from './auth/supabase-ca.ts';
 import { readEdgeConfig, type Environment } from './config.ts';
+import type { Database } from './database.types.ts';
 import { issueDataToken, loadSigningKey, type DataSession } from './token.ts';
 
 export function createEdgeRuntime(env: Environment, publicOrigin: string) {
@@ -19,7 +20,7 @@ export function createEdgeRuntime(env: Environment, publicOrigin: string) {
     config, authPool, pool, auth, appId: config.appId,
     async data(session: DataSession) {
       const token = await issueDataToken(session, config.signingJwk);
-      return createClient(config.dataUrl, config.publicKey, {
+      return createClient<Database>(config.dataUrl, config.publicKey, {
         accessToken: async () => token,
         auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
         global: { fetch: (input, init) => fetch(input, { ...init, cache: 'no-store', signal: AbortSignal.timeout(8000) }) },
