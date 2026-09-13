@@ -14,7 +14,7 @@ Next.js 개발 서버는 `.env.local` 값을 `.env`보다 우선한다. Node 관
 ## 운영 적용
 
 1. Netlify 프로젝트의 **Project configuration → Environment variables → Import from a .env file**에서 `.env`를 가져온다. 다른 호스팅으로 이전할 때도 같은 파일을 해당 호스팅의 환경 변수 가져오기에 사용한다.
-2. **Production**에 적용하고, 범위를 선택할 수 있으면 **Builds와 Functions**를 포함한다. 현재 빌드 검증과 실행 서버가 모두 설정을 사용한다.
+2. **Production**에 적용한다. `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_KEY`는 **Builds와 Functions**에 둔다. 나머지 설정은 **Functions**에만 둔다. 특히 `SUPABASE_DATA_SIGNING_JWK`, DB URL, 인증 시크릿은 빌드에서 사용하지 않는다. 가져오기 후 변수별 범위를 확인한다.
 3. 기존 등록 항목에 관리자 연결이나 로컬 테스트 DB 설정이 있다면 제거한다. 파일 가져오기는 불필요한 기존 항목을 자동 삭제하지 않는다.
 4. 저장 후 다시 배포하고 첫 화면·카카오 로그인·이용권 조회를 확인한다.
 
