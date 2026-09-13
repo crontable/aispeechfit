@@ -6,6 +6,8 @@ Netlify는 화면 렌더링과 고정 경로 프록시를 실행한다. Supabase
 
 함수의 `deno.json`과 `deno.lock`을 함께 사용한다. `supabase/config.toml`에 함수별 `verify_jwt=false`를 선언하며, 보호 경로에서는 별도로 Better Auth 세션·전화번호·이용권을 검증한다. DB 연결에는 기존 실행 역할과 TLS 인증서 검증을 유지한다.
 
+PR #30 검증 주소는 `https://deploy-preview-30--aispeechfit.netlify.app`이며 `service-auth-preview-v1`을 사용한다. 운영은 `https://aispeechfit.crontables.com`과 `service-auth-v1`을 사용한다. 두 진입점은 동일한 공유 구현·의존성을 참조하고 정확한 Origin·함수 이름만 다르다. 검증 함수의 Origin은 PR #30으로 한정하며 다른 미리보기 주소를 자동 허용하지 않는다.
+
 Supabase Management API의 `POST /v1/projects/{ref}/functions/deploy`에 `slug`와 multipart form을 전달한다. `metadata`는 함수 이름, `entrypoint_path`, `import_map_path`, `verify_jwt`를 담는다. 각 소스 파일을 `file` 항목으로 넣고 상대 경로를 파일 이름으로 보존한다. `.env*`와 저장소 전체는 업로드하지 않는다. `bundleOnly=1`로 먼저 실제 플랫폼 번들을 검사한다.
 
 관리 토큰은 로컬 `.env.local`에서 읽고 Authorization 헤더에만 사용한다. Function Secrets 등록 목록은 [환경 변수 명세](./NETLIFY-ENV.md)의 아홉 항목으로 제한한다. Supabase Secrets는 프로젝트 단위이므로 검증·운영 Origin은 각 함수 진입점에 고정하고 비밀정보를 서로 덮어쓰지 않는다.
