@@ -9,8 +9,11 @@ export async function loadSigningKey(text: string) {
   try {
     const jwk = JSON.parse(text);
     if (jwk.kty !== 'EC' || jwk.crv !== 'P-256' || !jwk.d || typeof jwk.kid !== 'string'
-      || !jwk.kid || (jwk.alg && jwk.alg !== 'ES256')) throw new Error();
-    const key = await crypto.subtle.importKey('jwk', jwk, { name: 'ECDSA', namedCurve: 'P-256' }, false, ['sign']);
+      || !jwk.kid || (jwk.alg && jwk.alg !== 'ES256') || (jwk.use && jwk.use !== 'sig')
+      || (jwk.key_ops && (!Array.isArray(jwk.key_ops) || !jwk.key_ops.includes('sign')))) throw new Error();
+    // Imported project keys can advertise both sign and verify. A private ECDSA key
+    // is used only for signing; normalize usage metadata for the hosted Web Crypto runtime.
+    const key = await crypto.subtle.importKey('jwk', { ...jwk, key_ops: ['sign'] }, { name: 'ECDSA', namedCurve: 'P-256' }, false, ['sign']);
     return { key, kid: jwk.kid as string };
   } catch { throw new Error('EDGE_SIGNING_KEY_INVALID'); }
 }

@@ -118,7 +118,10 @@ export function createServiceHandler(getRuntime: () => EdgeRuntime, options: Opt
       if (error instanceof KakaoVerificationError) return serviceJson({ errorCode: error.code }, error.code === 'session_expired' ? 401 : 422);
       if (error instanceof Error && error.message === 'BODY_TOO_LARGE') return serviceJson({ error: 'body_too_large' }, 413);
       // Never log the thrown error: database/OAuth errors can contain credentials or personal data.
-      console.error(JSON.stringify({ event: 'service_unavailable', stage, requestId, version: options.version }));
+      const known = ['EDGE_SIGNING_KEY_INVALID', 'EDGE_CONFIG_MISSING', 'EDGE_CONFIG_INVALID', 'EDGE_DB_CONFIG_INVALID',
+        'EDGE_PUBLIC_KEY_INVALID', 'TICKET_UNAVAILABLE', 'DATA_UNAVAILABLE'];
+      const code = error instanceof Error && known.includes(error.message) ? error.message : 'DEPENDENCY_UNAVAILABLE';
+      console.error(JSON.stringify({ event: 'service_unavailable', stage, code, requestId, version: options.version }));
       return serviceJson({ error: 'service_unavailable', requestId }, 503);
     }
   };

@@ -6,7 +6,7 @@ import { readEdgeConfig } from '../../supabase/functions/_shared/config.ts';
 
 test('Web Crypto emits a valid JOSE ES256 signature and preserves session-bound claims', async () => {
   const { privateKey, publicKey } = generateKeyPairSync('ec', { namedCurve: 'P-256' });
-  const jwk = JSON.stringify({ ...privateKey.export({ format: 'jwk' }), kid: 'existing-key' });
+  const jwk = JSON.stringify({ ...privateKey.export({ format: 'jwk' }), kid: 'existing-key', alg: 'ES256', use: 'sig', key_ops: ['sign', 'verify'] });
   const id = randomUUID(), now = Date.now();
   const session = { user: { id }, session: { id: randomUUID(), userId: id, expiresAt: new Date(now + 30000) } };
   const parts = (await issueDataToken(session, jwk, now)).split('.');
@@ -20,6 +20,7 @@ test('Web Crypto emits a valid JOSE ES256 signature and preserves session-bound 
   assert.equal(claims.exp, Math.floor(session.session.expiresAt.getTime() / 1000));
   await assert.rejects(issueDataToken(session, jwk, now + 31000));
   await assert.rejects(issueDataToken({ ...session, user: { id: randomUUID() } }, jwk, now));
+  await assert.rejects(issueDataToken(session, JSON.stringify({ ...JSON.parse(jwk), key_ops: ['verify'] }), now));
 });
 
 test('Edge configuration requires least-privileged roles and rejects an admin Data API key', () => {
