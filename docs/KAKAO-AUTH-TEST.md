@@ -4,6 +4,22 @@
 
 ## 1. 실행 범위
 
+2026-09-13 후속 단계부터 현재 `/dev/kakao`와 `/api/auth`는 `lib/auth/`의 새 인증 코드와 `127.0.0.1:55433/auth_migration`의 `better_auth` 스키마를 사용한다. 아래 기존 `kakao_test_auth` 설명과 검사 21개는 첫 실연동 기록이다. 기존 DB는 변경하지 않았으며 신규 실행은 다음 명령을 따른다.
+
+```sh
+pnpm kakao:setup
+pnpm auth-migration:setup
+pnpm auth-migration:db
+pnpm auth-schema:apply
+pnpm kakao:dev
+```
+
+기존 카카오 키·앱 ID·callback을 그대로 사용한다. 새 스키마용 쿠키 접두사를 사용하므로 이전 검증 세션과 분리된다. `pnpm auth-schema:evidence`로 새 스키마 결과를, `pnpm test:auth-schema`로 새 콜백·스키마 검사 22개를 확인한다. `pnpm kakao:evidence`는 이전 DB 결과만 조회한다.
+
+새 코드 실연동에서 실제 카카오 최초 로그인·전화번호 저장·로그아웃·재로그인을 확인했다. 로그아웃 시 활성 세션 0개, 재로그인 시 사용자 1개·카카오 계정 1개·활성 세션 1개·확인된 활성 세션 0개로 중복 없는 가입과 새 세션 재확인을 확인했다. 제공자 토큰 암호화 확인도 통과했다. 서비스의 기존 Google 로그인, 이용권 조회, RLS는 아직 전환하지 않았다.
+
+## 1-1. 첫 개발 검증 기록
+
 `/dev/kakao`에서 로그인과 전화번호 확인을 실행한다. 인증 테이블은 Docker Compose가 별도로 만든 `127.0.0.1:55432/kakao_test`의 `kakao_test_auth` 스키마를 사용한다. 현재 Supabase의 사용자·이용권·RLS와 독립된 개발 검증 환경이다. 실제 사용자 데이터 이관과 서비스 로그인 전환은 이슈 #20의 후속 단계다.
 
 검증 경로는 `KAKAO_AUTH_TEST_ENABLED=true`이고 `NODE_ENV`가 production이 아닐 때만 열린다. Next.js 개발 서버는 localhost에 바인딩한다. 원격 DB 연결과 다른 DB 이름·포트는 설정 검사에서 거부한다. 개발 앱의 계정 ID는 운영 앱의 계정 ID로 이관하지 않는다.

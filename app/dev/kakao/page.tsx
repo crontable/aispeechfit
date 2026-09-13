@@ -1,21 +1,22 @@
 import { headers } from 'next/headers';
 import { notFound } from 'next/navigation';
-import { isKakaoTestEnabled, missingKakaoSettings } from '@/lib/kakao-test/config';
-import { getKakaoTestRuntime } from '@/lib/kakao-test/server';
-import { readKakaoStatus } from '@/lib/kakao-test/verification';
+import { missingLocalAuthSettings } from '@/lib/auth/local-config';
+import { isKakaoTestEnabled } from '@/lib/kakao-test/config';
+import { getLocalAuthRuntime } from '@/lib/auth/local-server';
+import { readKakaoStatus } from '@/lib/auth/kakao-verification';
 import KakaoTestPanel from './panel';
 
 export const dynamic = 'force-dynamic';
 
 export default async function KakaoTestPage() {
   if (!isKakaoTestEnabled() || (await headers()).get('host') !== 'localhost:3000') notFound();
-  const missing = missingKakaoSettings();
+  const missing = missingLocalAuthSettings();
   let signedIn = false;
   let setupError = false;
   let status = null;
   if (!missing.length) {
     try {
-      const { auth, pool } = getKakaoTestRuntime();
+      const { auth, pool } = getLocalAuthRuntime();
       const session = await auth.api.getSession({ headers: await headers() });
       signedIn = !!session;
       if (session) status = await readKakaoStatus(pool, session);

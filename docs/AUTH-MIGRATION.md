@@ -8,7 +8,9 @@
 
 ### 신규 스키마 구현 상태
 
-공통 매핑은 `lib/auth/schema-options.ts`, 생성 SQL은 `supabase/migrations/20260913000000_create_better_auth.sql`, 복원 SQL은 같은 파일명의 `supabase/rollback/`, 읽기 전용 확인은 `supabase/verification/better-auth-schema.sql`이다. Better Auth 1.7.4가 생성한 기본 열·자료형에 맞추고 카카오 전용 제약을 추가했다. 아직 서비스 인증 factory에 연결하지 않은 설정이다.
+공통 매핑은 `lib/auth/schema-options.ts`, 생성 SQL은 `supabase/migrations/20260913000000_create_better_auth.sql`, 복원 SQL은 같은 파일명의 `supabase/rollback/`, 읽기 전용 확인은 `supabase/verification/better-auth-schema.sql`이다. Better Auth 1.7.4가 생성한 기본 열·자료형에 맞추고 카카오 전용 제약을 추가했다. `lib/auth/kakao.ts`의 인증 factory에 연결했고 개발 경로 `/dev/kakao`와 `/api/auth`가 새 스키마를 사용한다. 운영 서비스의 로그인·이용권 접근은 아직 전환 전이다.
+
+`lib/auth/kakao-verification.ts`는 새 스키마의 복합 FK와 버전 제약을 따르는 전화번호 검증을 수행한다. `local-config.ts`와 `local-server.ts`는 개발 플래그·localhost·전용 DB를 제한한다. 기존 테스트 DB 세션과 별도 쿠키를 사용한다. 새 실제 카카오 가입·전화번호 저장·로그아웃·중복 없는 재로그인을 확인했다. `tests/auth-schema/kakao.test.ts`의 가상 외부 응답 검사를 더해 `pnpm test:auth-schema`는 부모 검사 포함 총 22개다.
 
 `pnpm test:auth-schema`는 로컬 임시 데이터베이스에서 생성·반복 적용·Better Auth 스키마 차이 없음·실제 라이브러리 가입/로그인/세션 조회·계정 subject 유일성·카카오 account/user/subject 복합 참조·세션 복합 참조·번호 상태와 버전·일반 역할 접근 차단·데이터가 있을 때 복원 거부·빈 스키마 복원을 검증한다. 출력은 부모 검사 포함 10개 통과다. 이 검사에서만 합성 이메일/비밀번호 로그인을 켜며 운영 인증 수단을 추가하지 않는다.
 

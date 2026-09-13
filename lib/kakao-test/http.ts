@@ -1,11 +1,10 @@
 import { isLocalTestRequest, TEST_ORIGIN } from './config.ts';
-import type { KakaoTestAuth } from './auth.ts';
 
 export function json(body: unknown, status = 200) {
   return Response.json(body, { status, headers: { 'Cache-Control': 'no-store', 'Referrer-Policy': 'no-referrer' } });
 }
 
-export async function handleAuthTestRequest(request: Request, getAuth: () => KakaoTestAuth) {
+export async function handleAuthTestRequest(request: Request, getAuth: () => { handler: (request: Request) => Promise<Response> }) {
   if (!isLocalTestRequest(request)) return json({ error: 'not_found' }, 404);
   const path = new URL(request.url).pathname.slice('/api/auth'.length);
   const allowed = request.method === 'GET'
