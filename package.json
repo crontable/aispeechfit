@@ -12,9 +12,11 @@
   "scripts": {
     "dev": "next dev",
     "build": "node scripts/netlify/check-env.mjs && next build",
+    "test:public-build": "node scripts/netlify/verify-build.mjs",
     "start": "next start",
     "lint": "eslint .",
     "lint:fix": "pnpm run lint --fix",
+    "test:data-api": "node --test supabase/verification/access-policy.test.mjs",
     "test:edge-auth": "node --env-file=.env --env-file=.env.local --test --test-concurrency=1 tests/edge-auth/*.test.ts",
     "test:auth-tools": "node --test tests/auth-tools/*.test.mjs",
     "test:auth-ui": "node --test --test-concurrency=1 tests/auth-ui/*.test.mjs",

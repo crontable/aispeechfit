@@ -65,3 +65,7 @@ Data API가 서명·JWT 만료를 검증한 뒤 `public.has_valid_auth_session()
 ## 기록하지 않는 것
 
 이슈, 커밋, 문서, 로그에 키 원문, 사용자 토큰, 사용자 ID, 이메일, 이용권 원문을 적지 않는다. 검증 결과는 자격 유형·테이블·작업·상태 코드·허용 행 수로 적는다.
+
+## 직접 HTTP 검증
+
+`pnpm test:data-api`는 새 로컬 PostgreSQL·PostgREST와 실행마다 생성한 서명 키·합성 자료로 위 허용 범위를 검사한다. 실제 세션 철회·만료·이용권 변경과 HTTP 서명 거부를 함께 확인하며, 일반 역할의 거부 예상 쓰기도 이 환경에서만 실행한다. 운영 Supabase gateway와 실제 계정 검증은 별도 절차다. [8번 검증 명세](./PHONE-FREE-VERIFICATION.md)를 따른다.

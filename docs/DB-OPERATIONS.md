@@ -10,7 +10,7 @@ Supabase 프로젝트의 권한·정책을 바꿀 때 밟는 순서다. 이 저�
 | `supabase/operations/retire-phone-access.sql` | 이슈 #32의 새 인증 배포 후 수동 권한 회수. 데이터 폐기와 별도이며 자동 적용하지 않는다 |
 | `supabase/rollback/<timestamp>_<name>.sql` | 같은 timestamp의 마이그레이션을 적용 전 상태로 되돌리는 SQL |
 | `supabase/verification/access-policy.sql` | 적용 전후에 실행하는 읽기 전용 확인 질의. 기대 결과를 주석에 적는다 |
-| `supabase/verification/access-policy.test.mjs` | 8번에서 Better Auth 서명 토큰 명세에 맞춰 합성 데이터 환경의 HTTP 검사로 개편한다 |
+| `supabase/verification/access-policy.test.mjs` | 새 로컬 PostgreSQL·PostgREST에서 서명 토큰으로 HTTP 접근을 검사한다. `pnpm test:data-api`로 실행하며 운영 URL을 받지 않는다 |
 | `supabase/functions/_shared/database.types.ts` | CLI가 `public` 스키마에서 생성한 TypeScript 타입. 손으로 고치지 않는다 |
 | `domain/database.types.ts` | 위 파일을 Next.js 쪽 경로로 다시 내보내는 파일 |
 
@@ -23,7 +23,7 @@ Supabase 프로젝트의 권한·정책을 바꿀 때 밟는 순서다. 이 저�
 5. **운영 적용.** SQL Editor에 마이그레이션 파일 전체를 붙여 한 번에 실행한다. 트랜잭션이라 중간 실패 시 아무것도 바뀌지 않는다. 실행 시각과 실행한 사람을 이슈에 적는다.
 6. **확인.**
    - `supabase/verification/access-policy.sql`을 다시 실행해 주석의 기대 결과와 맞춘다.
-   - 8번에서 합성 데이터 환경의 실제 HTTP 검사를 수행한다. 운영 적용 후 확인할 실계정·읽기 범위는 9번에서 정하며 거부 예상 쓰기를 운영에 실행하지 않는다.
+   - `pnpm test:data-api`의 합성 로컬 HTTP 결과를 확인한다. 실제 운영 적용 후에는 별도로 승인된 실계정·읽기 범위에서 조회 동작을 확인하며, 로컬 검사를 운영 검증으로 집계하지 않는다.
    - 유효 이용권 계정으로 로그인해 `/study`와 챕터 화면이 뜨는지, 이용권 없는 계정으로 `/unauthorized`가 뜨는지 본다.
    - 대시보드 Advisors → Security의 경고를 적용 전과 비교한다.
 7. **복원.** 정상 요청이 막히면 원인을 자격(토큰 전달)·권한(GRANT)·정책(RLS) 순서로 가른다. 원인을 못 찾으면 복원 파일을 실행해 1번 상태로 돌아간다. RLS 일괄 해제나 `grant all`로 복구하지 않는다.
@@ -63,3 +63,5 @@ Supabase 프로젝트의 권한·정책을 바꿀 때 밟는 순서다. 이 저�
 | 2026. 09. 13. | (마이그레이션 없음) | `public` 스키마에서 TypeScript 타입을 처음 생성해 커밋. 이슈 #27 |
 
 이슈 #32의 7번 수동 SQL은 정책·GRANT·역할만 회수하며 public 열·함수 형식은 바꾸지 않는다. public 타입은 격리 DB에서 CLI로 생성한 결과를 비교하며 수동으로 고치지 않는다. 개인정보 자료·식별 관계와 운영 정리 순서는 [운영 정리 명세](./PHONE-REMOVAL-OPERATIONS.md)를 따른다.
+
+최종 자동 검사·공개 설정 빌드·직접 HTTP의 재현 방법과 운영 검증의 경계는 [8번 검증 명세](./PHONE-FREE-VERIFICATION.md)에 있다.
