@@ -7,7 +7,7 @@
 | `.env.example` | 비밀 값 없는 운영 설정 템플릿 |
 | `.env.local.example` | 비밀 값 없는 로컬 설정 템플릿 |
 
-두 실제 파일은 Git에서 제외한다. `.env`에는 운영 실행 계정과 인증 설정 13개가 있고, 관리자 `SUPABASE_MIGRATION_SOURCE_DATABASE_URL`과 로컬 테스트 DB 비밀번호는 `.env.local`에만 둔다. 운영 파일의 DB 연결 계정은 `better_auth_runtime`, `better_auth_phone_writer`이다.
+두 실제 파일은 Git에서 제외한다. `.env`에는 운영 실행 계정과 인증 설정 11개가 있고, 관리자 `SUPABASE_MIGRATION_SOURCE_DATABASE_URL`과 로컬 테스트 DB 비밀번호는 `.env.local`에만 둔다. 운영 파일의 DB 연결 계정은 `better_auth_runtime`, `better_auth_phone_writer`이다.
 
 Next.js 개발 서버는 `.env.local` 값을 `.env`보다 우선한다. Node 관리·검사 명령은 `--env-file=.env --env-file=.env.local` 순서로 두 파일을 읽는다. 로컬에서도 필요한 공통 운영 설정은 `.env`에서 읽으며, 로컬 URL과 테스트 플래그만 `.env.local`에서 덮어쓴다. 별도 환경 파일 생성 명령은 없다.
 
@@ -21,3 +21,15 @@ Next.js 개발 서버는 `.env.local` 값을 `.env`보다 우선한다. Node 관
 실제 파일을 Git이나 공개 정적 파일로 배포하지 않는다. 운영 도메인이 변경되면 `.env`의 `BETTER_AUTH_URL`과 카카오 개발자센터의 Redirect URI를 함께 수정한다. 현재 Redirect URI는 `https://aispeechfit.crontables.com/api/auth/callback/kakao`이다.
 
 DB 실행 계정 준비·전환 명령은 운영 설정을 `.env`에 저장한다. 관리용 연결 정보는 `.env.local`에서 읽는다. 기존 운영 DB 전환은 완료됐으므로 환경 파일 정리를 위해 DB 전환 명령을 다시 실행하지 않는다.
+
+## 항목별 재검토 결과
+
+| 분류 | 항목 | 보관·범위 |
+| --- | --- | --- |
+| 공개 설정 | `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_KEY` | `.env`, Builds + Functions |
+| 운영 일반 설정 | `BETTER_AUTH_URL`, `BETTER_AUTH_DATA_API_READY`, `KAKAO_APP_ID`, `KAKAO_CLIENT_ID` | `.env`, Functions |
+| 운영 비밀 설정 | `AUTH_DATABASE_URL`, `AUTH_PHONE_DATABASE_URL`, `BETTER_AUTH_SECRET`, `KAKAO_CLIENT_SECRET`, `SUPABASE_DATA_SIGNING_JWK` | `.env`, Functions 전용 |
+| 로컬 관리 비밀 | `SUPABASE_MIGRATION_SOURCE_DATABASE_URL`, `AUTH_MIGRATION_DATABASE_URL`, `AUTH_MIGRATION_DB_PASSWORD`, `KAKAO_TEST_DATABASE_URL`, `KAKAO_TEST_DB_PASSWORD` | `.env.local` 전용 |
+| 개발 덮어쓰기 | `BETTER_AUTH_URL`, `KAKAO_AUTH_TEST_ENABLED`, `KAKAO_REMOTE_AUTH_TEST_ENABLED` | `.env.local` 전용 |
+
+운영 비밀 설정 다섯 개는 서비스 인증과 데이터 요청 처리에서 실제 사용한다. 빌드에는 제공하지 않는다. 두 개발 테스트 플래그는 운영 파일에서 제거했다. production에서는 코드가 개발 경로를 차단하므로 운영에 이 플래그를 등록할 필요가 없다. 파일 가져오기 후 호스팅에 기존 등록된 테스트 플래그가 남아 있으면 삭제한다.
