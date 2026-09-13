@@ -10,7 +10,7 @@ export function serviceCookie(headers: Headers) {
 
 export async function forwardServiceRequest(request: Request, fetchService = fetch, config = getServiceConfig()) {
   const url = new URL(request.url);
-  if (url.origin !== config.origin) {
+  if (url.origin !== config.origin && url.origin !== config.deploymentOrigin) {
     console.error(JSON.stringify({ event: 'service_origin_mismatch', requestOrigin: url.origin, configuredOrigin: config.origin }));
     return serviceJson({ error: 'invalid_host' }, 403);
   }
@@ -31,10 +31,21 @@ export async function forwardServiceRequest(request: Request, fetchService = fet
       redirect: 'manual', cache: 'no-store', signal: AbortSignal.timeout(20000),
     });
     const forwarded = copyServiceResponse(response);
-    // Netlify carries query parameters across 302 redirects. Keep OAuth code/state
-    // on the callback endpoint by completing the exchange with an explicit 303.
+    // Netlify carries callback query parameters across Location redirects.
+    // An explicit HTML refresh navigates to the exact clean URL, with no scripts.
     if (url.pathname === '/api/auth/callback/kakao' && forwarded.status === 302) {
-      return new Response(forwarded.body, { status: 303, headers: forwarded.headers });
+      const target = new URL(forwarded.headers.get('location') ?? '', config.origin);
+      if (target.origin !== config.origin || !['/auth/complete', '/api/auth/error'].includes(target.pathname)) {
+        return serviceJson({ error: 'service_unavailable' }, 503);
+      }
+      target.searchParams.delete('code');
+      target.searchParams.delete('state');
+      const href = target.href.replaceAll('&', '&amp;').replaceAll('"', '&quot;').replaceAll('<', '&lt;').replaceAll('>', '&gt;');
+      forwarded.headers.delete('location');
+      forwarded.headers.set('content-type', 'text/html; charset=utf-8');
+      forwarded.headers.set('content-security-policy', "default-src 'none'; base-uri 'none'; frame-ancestors 'none'");
+      forwarded.headers.set('x-content-type-options', 'nosniff');
+      return new Response(`<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="referrer" content="no-referrer"><meta http-equiv="refresh" content="0;url=${href}"><title>로그인 완료 중</title></head><body><p>로그인을 마무리하고 있습니다.</p><a href="${href}">계속</a></body></html>`, { status: 200, headers: forwarded.headers });
     }
     return forwarded;
   } catch (error) {

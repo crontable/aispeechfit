@@ -5,7 +5,7 @@ import { getServiceConfig } from '../../lib/service/config.ts';
 
 const config = { origin: 'https://fixture.example', functionUrl: 'https://project.supabase.co/functions/v1/service-auth-v1' };
 
-test('proxy completes OAuth with 303 without code/state in the destination and preserves cookie deletion', async () => {
+test('proxy completes OAuth with an exact clean navigation and preserves cookie deletion', async () => {
   let upstream: Request | undefined;
   const fakeFetch: typeof fetch = async (input, init) => {
     upstream = new Request(input, init);
@@ -22,11 +22,24 @@ test('proxy completes OAuth with 303 without code/state in the destination and p
   assert.equal(upstream!.headers.get('cookie'), '__Secure-aispeechfit-better-auth.state=signed');
   for (const name of ['authorization', 'x-forwarded-host', 'x-forwarded-for']) assert.equal(upstream!.headers.get(name), null);
   assert.equal(upstream!.redirect, 'manual');
-  assert.equal(response.status, 303);
-  assert.equal(response.headers.get('location'), config.origin + '/auth/complete');
+  assert.equal(response.status, 200);
+  assert.equal(response.headers.get('location'), null);
+  assert.match(await response.text(), /http-equiv="refresh" content="0;url=https:\/\/fixture.example\/auth\/complete"/);
+  assert.match(response.headers.get('content-security-policy')!, /default-src 'none'/);
   assert.equal(response.headers.getSetCookie().length, 2);
   assert.match(response.headers.getSetCookie()[1], /Max-Age=0/);
   assert.equal(response.headers.get('cache-control'), 'no-store');
+});
+
+test('proxy accepts only the pinned Netlify deployment alias and keeps browser Origin canonical', async () => {
+  const deploymentOrigin = 'https://0123456789abcdef01234567--fixture.netlify.app';
+  const pinned = { ...config, deploymentOrigin };
+  let calls = 0;
+  const upstream: typeof fetch = async () => { calls++; return Response.json({ state: 'anonymous' }); };
+  assert.equal((await forwardServiceRequest(new Request(deploymentOrigin + '/api/service/access'), upstream, pinned)).status, 200);
+  assert.equal((await forwardServiceRequest(new Request(deploymentOrigin + '/api/auth/sign-out', { method: 'POST', headers: { origin: 'https://attacker.example' } }), upstream, pinned)).status, 403);
+  assert.equal((await forwardServiceRequest(new Request('https://fedcba987654321001234567--fixture.netlify.app/api/service/access'), upstream, pinned)).status, 403);
+  assert.equal(calls, 1);
 });
 
 test('proxy rejects forged host/origin and exposes only safe errors on upstream failure', async () => {
