@@ -18,7 +18,7 @@ export default async function Layout({ children }: { children: React.ReactNode }
   try { result = await readServiceBooks(); }
   catch (error) {
     if (error instanceof ServiceError && error.status === 401) redirect('/sign-in');
-    if (error instanceof ServiceError && error.status === 403) redirect('/auth/complete');
+    if (error instanceof ServiceError && error.status === 403) redirect('/unauthorized');
     redirect('/service-unavailable');
   }
   const { books: bookDTOs, chapters: chapterDTOs } = result;

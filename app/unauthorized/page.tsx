@@ -1,11 +1,11 @@
 import { redirect } from 'next/navigation';
-import { requireConfirmedSession } from '@/lib/auth/access';
+import { requireSession } from '@/lib/auth/access';
 import { SUBSCRIPTION_REQUEST_FORM_URL } from '@/constant';
 import { Button } from '@/components/ui/button';
 import LogoutButton from '@/components/LogoutButton';
 export const dynamic = 'force-dynamic';
 export default async function UnauthorizedPage() {
-  const access = await requireConfirmedSession();
+  const access = await requireSession();
   if (access.state === 'active') redirect('/study');
   const subscriptionUrl = SUBSCRIPTION_REQUEST_FORM_URL + encodeURIComponent(access.user.email);
   return <main className="mx-auto flex min-h-screen max-w-md flex-col justify-center gap-5 px-6 text-center">

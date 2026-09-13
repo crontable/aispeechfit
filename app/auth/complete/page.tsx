@@ -1,10 +1,7 @@
 import { redirect } from 'next/navigation';
-import { getSessionAccess } from '@/lib/auth/access';
-import CompleteLogin from './panel';
+import { requireStudyAccess } from '@/lib/auth/access';
 export const dynamic = 'force-dynamic';
 export default async function CompletePage() {
-  const access = await getSessionAccess();
-  if (!access) redirect('/sign-in');
-  if (access.state !== 'phone_pending') redirect('/study');
-  return <CompleteLogin />;
+  await requireStudyAccess();
+  redirect('/study');
 }
