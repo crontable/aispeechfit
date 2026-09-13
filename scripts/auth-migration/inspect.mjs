@@ -1,4 +1,5 @@
 import pg from 'pg';
+import { readFileSync } from 'node:fs';
 
 // Inspect only catalog metadata and aggregate counts; never export user rows.
 let client;
@@ -10,7 +11,9 @@ try {
     throw new Error('SOURCE_URL_MUST_HAVE_NO_QUERY');
   }
   client = new pg.Client({ connectionString: value,
-    ssl: { rejectUnauthorized: true }, connectionTimeoutMillis: 10000 });
+    ssl: { rejectUnauthorized: true,
+      ca: readFileSync(new URL('./certs/prod-ca-2021.crt', import.meta.url), 'utf8') },
+    connectionTimeoutMillis: 10000 });
   await client.connect();
   await client.query('BEGIN ISOLATION LEVEL REPEATABLE READ READ ONLY');
   await client.query("SET LOCAL statement_timeout = '15s'");
