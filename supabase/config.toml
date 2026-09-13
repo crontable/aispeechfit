@@ -1,0 +1,8 @@
+[functions.service-auth-v1]
+verify_jwt = false
+entrypoint = "./functions/service-auth-v1/index.ts"
+
+[functions.service-auth-preview-v1]
+verify_jwt = false
+entrypoint = "./functions/service-auth-preview-v1/index.ts"
+import_map = "./functions/service-auth-v1/deno.json"

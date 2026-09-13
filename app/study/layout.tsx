@@ -4,30 +4,24 @@ import { Sidebar, SidebarItem } from '@/components/sidebar/sidebar';
 import { Book } from '@/domain/types';
 import { BooksProvider } from '@/components/providers/books-provider';
 import { convertBooks } from '@/lib/converter';
+import { readServiceBooks, ServiceError } from '@/lib/service/client';
+import { redirect } from 'next/navigation';
 import { requireStudyAccess } from '@/lib/auth/access';
 import { MainContent } from '@/components/main-content';
 
 export const dynamic = 'force-dynamic';
 
 export default async function Layout({ children }: { children: React.ReactNode }) {
-  const { session, client: supabase } = await requireStudyAccess();
-  const user = { name: session.user.name, email: session.user.email, image: session.user.image };
-
-  // Books 테이블 raw data 조회
-  const { data: bookDTOs, error: fetchingBookError } = await supabase
-    .from('books')
-    .select('*')
-    .order('id', { ascending: false });
-
-  // Chapters 테이블 raw data 조회
-  const { data: chapterDTOs, error: fetchingChapterError } = await supabase
-    .from('chapters')
-    .select('*')
-    .order('sort_order', { ascending: true });
-
-  if (fetchingBookError || fetchingChapterError) {
-    return <div>학습 자료를 불러오는 중 문제가 생겼습니다.</div>;
+  const access = await requireStudyAccess();
+  const user = access.user;
+  let result;
+  try { result = await readServiceBooks(); }
+  catch (error) {
+    if (error instanceof ServiceError && error.status === 401) redirect('/sign-in');
+    if (error instanceof ServiceError && error.status === 403) redirect('/auth/complete');
+    redirect('/service-unavailable');
   }
+  const { books: bookDTOs, chapters: chapterDTOs } = result;
 
   const books = convertBooks({
     bookDTOs: bookDTOs ?? [],

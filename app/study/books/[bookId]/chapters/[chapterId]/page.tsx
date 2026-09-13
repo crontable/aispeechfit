@@ -1,3 +1,5 @@
+import { readServiceChapter, ServiceError } from '@/lib/service/client';
+import { notFound, redirect } from 'next/navigation';
 import ReversibleCard from "@/components/ReversibleCard";
 import { ConditionalSidebarToggle } from "@/components/conditional-sidebar-toggle";
 import { convertToReversibleCardQuestions } from "@/lib/converter";
@@ -10,33 +12,17 @@ type PageParams = Promise<{
 }>;
 
 export default async function ChapterPage({ params }: { params: PageParams }) {
-  // 명시적으로 params에서 값 추출
-  const { chapterId } = await params;
-
-  const { client: supabase } = await requireStudyAccess();
-
-  // 해당 챕터 정보 조회
-  const { data: chapter, error: chapterError } = await supabase
-    .from("chapters")
-    .select("*")
-    .eq("id", chapterId)
-    .single();
-
-  if (chapterError) {
-    return <div>챕터 정보를 불러오는 중 오류가 발생했습니다.</div>;
+  const { bookId, chapterId } = await params;
+  await requireStudyAccess();
+  let result;
+  try { result = await readServiceChapter(bookId, chapterId); }
+  catch (error) {
+    if (error instanceof ServiceError && error.status === 404) notFound();
+    if (error instanceof ServiceError && error.status === 401) redirect('/sign-in');
+    if (error instanceof ServiceError && error.status === 403) redirect('/unauthorized');
+    redirect('/service-unavailable');
   }
-
-  // 해당 챕터에 속한 질문들 조회
-  const { data: questions, error: questionsError } = await supabase
-    .from("questions")
-    .select("*")
-    .eq("chapter_id", chapterId)
-    .order("sort_order", { ascending: true })
-    .order("id", { ascending: true });
-
-  if (questionsError) {
-    return <div>질문 데이터를 불러오는 중 오류가 발생했습니다.</div>;
-  }
+  const { chapter, questions } = result;
 
   if (!questions || questions.length === 0) {
     return (
