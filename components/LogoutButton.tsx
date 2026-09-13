@@ -4,7 +4,7 @@ import { authClient } from '@/lib/auth/client';
 import { Button } from '@/components/ui/button';
 import { LogOut } from 'lucide-react';
 import { toast } from 'sonner';
-import { useRouter } from 'next/navigation';
+import { useState } from 'react';
 
 interface LogoutButtonProps {
   variant?: 'default' | 'destructive' | 'outline' | 'secondary' | 'ghost' | 'link';
@@ -19,23 +19,26 @@ export default function LogoutButton({
   showIcon = true,
   showText = false,
 }: LogoutButtonProps) {
-  const router = useRouter();
+  const [pending, setPending] = useState(false);
 
   async function signOut() {
+    if (pending) return;
+    setPending(true);
     try {
       const { error } = await authClient.signOut();
 
       if (error) {
         toast.error(error.message || '로그아웃 중 오류가 발생했습니다');
+        setPending(false);
         return;
       }
 
       toast.success('로그아웃 되었습니다');
-      router.replace('/sign-in');
-      router.refresh();
+      window.location.replace('/sign-in');
     } catch (err) {
       const message = err instanceof Error ? err.message : '로그아웃 중 오류가 발생했습니다';
       toast.error(message);
+      setPending(false);
     }
   }
 
@@ -46,6 +49,8 @@ export default function LogoutButton({
       size={size}
       className="rounded-full"
       aria-label="로그아웃"
+      disabled={pending}
+      aria-busy={pending}
     >
       {showIcon && <LogOut size={18} />}
       {showText && <span className="ml-2">로그아웃</span>}
