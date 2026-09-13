@@ -1,4 +1,4 @@
-export function getServiceConfig(env = {
+export function getServiceConfig(env: Record<string, string | undefined> = {
   NODE_ENV: process.env.NODE_ENV,
   EDGE_LOCAL_TEST: process.env.EDGE_LOCAL_TEST,
   BETTER_AUTH_URL: process.env.BETTER_AUTH_URL,
