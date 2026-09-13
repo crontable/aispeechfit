@@ -18,7 +18,7 @@ Supabase Management API의 `POST /v1/projects/{ref}/functions/deploy`에 `slug`�
 2. `.env.local`이 없는 별도 작업 공간에서 공개 설정만으로 `pnpm build`를 실행한다. Next.js 산출물과 Netlify 등록 변수에 비밀정보가 없는지 확인한다.
 3. 최초 배포에서만 `20260913030000_edge_request_limits.sql`을 적용한다. 인증·전화번호·이용권을 변경하지 않는 추가 테이블이다. 적용 전후 기존 행의 해시를 비교한다.
 4. 버전별 Edge 후보를 배포한다. `/health` 200, 익명 access, 쿠키 없는 자료 접근 401, 외부 Origin 403, 금지 API 404, 카카오 시작 응답을 확인한다. JWT와 OAuth 토큰 값은 로그에 남기지 않는다.
-5. Netlify 자동 공개를 잠그고 고정 HTTPS 검증 배포를 준비한다. 정확한 callback을 카카오 개발 앱에 등록하고 실제 계정으로 로그인·전화번호 확인·이용권·챕터·새로고침·로그아웃·재로그인을 검증한다.
+5. Netlify 자동 공개를 잠그고 고정 HTTPS 검증 배포를 준비한다. 카카오 개발 앱의 **앱 → 플랫폼 키 → 사용 중인 REST API 키 → 수정 → 카카오 로그인 리다이렉트 URI**에서 정확한 callback을 추가·저장한다. 기존 URI는 유지한다. 실제 계정으로 로그인·전화번호 확인·이용권·챕터·새로고침·로그아웃·재로그인을 검증한다. 메뉴 위치는 [카카오 공식 설정 문서](https://developers.kakao.com/docs/ko/app-setting/app#redirect-uri)를 따른다.
 6. 검증된 코드의 운영 Origin 함수와 Netlify 배포 조합을 공개한다. 운영 도메인에서 같은 동선을 확인하고 Git SHA·Netlify deploy ID·Edge 버전과 결과를 이슈 #29의 통합 코멘트에 기록한다.
 
 ## 복구
