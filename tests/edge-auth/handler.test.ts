@@ -58,8 +58,9 @@ test('anonymous access is distinct from runtime failure and protected data remai
 
 test('cookies with Expires survive proxy copying as separate Set-Cookie headers', () => {
   const headers = new Headers({ 'cache-control': 'public, max-age=3600', 'access-control-allow-origin': '*' });
-  headers.append('set-cookie', 'session=fixture; HttpOnly; Secure; Expires=Wed, 21 Oct 2030 07:28:00 GMT');
-  headers.append('set-cookie', 'state=fixture; HttpOnly; Secure');
+  headers.append('set-cookie', '__Secure-aispeechfit-better-auth.session_token=fixture; HttpOnly; Secure; Expires=Wed, 21 Oct 2030 07:28:00 GMT');
+  headers.append('set-cookie', '__Secure-aispeechfit-better-auth.state=fixture; HttpOnly; Secure');
+  headers.append('set-cookie', '__cf_bm=unrelated; Domain=.supabase.co');
   const copied = copyServiceResponse(new Response(null, { status: 302, headers }));
   assert.equal(copied.headers.getSetCookie().length, 2);
   assert.equal(copied.headers.get('cache-control'), 'no-store');

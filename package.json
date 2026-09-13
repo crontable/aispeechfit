@@ -15,6 +15,7 @@
     "start": "next start",
     "lint": "eslint .",
     "lint:fix": "pnpm run lint --fix",
+    "test:edge-auth": "node --env-file=.env --env-file=.env.local --test --test-concurrency=1 tests/edge-auth/*.test.ts",
     "kakao:setup": "node scripts/kakao-test/setup.mjs",
     "kakao:db": "docker compose --env-file .env.local -f compose.kakao-test.yml up -d --wait",
     "kakao:migrate": "node --env-file=.env --env-file=.env.local scripts/kakao-test/migrate.mjs",

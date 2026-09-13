@@ -1,5 +1,9 @@
 export const MAX_BODY_BYTES = 16 * 1024;
 
+export function isServiceCookieName(name: string) {
+  return name.startsWith('aispeechfit-better-auth.') || name.startsWith('__Secure-aispeechfit-better-auth.');
+}
+
 export function serviceJson(body: unknown, status = 200) {
   return Response.json(body, { status, headers: { 'Cache-Control': 'no-store', 'Referrer-Policy': 'no-referrer' } });
 }
@@ -37,6 +41,8 @@ export function copyServiceResponse(response: Response) {
     const value = response.headers.get(name);
     if (value) headers.set(name, value);
   }
-  for (const cookie of response.headers.getSetCookie()) headers.append('set-cookie', cookie);
+  for (const cookie of response.headers.getSetCookie()) {
+    if (isServiceCookieName(cookie.split('=')[0])) headers.append('set-cookie', cookie);
+  }
   return new Response(response.body, { status: response.status, headers });
 }

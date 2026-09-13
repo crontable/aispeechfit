@@ -11,7 +11,7 @@ try {
   const service=new URL(process.env.NEXT_PUBLIC_SUPABASE_URL);
   if(source.username!==`postgres.${service.hostname.split('.')[0]}` || !source.hostname.endsWith('.pooler.supabase.com')
     || source.port!=='5432' || source.search || source.hash) throw new Error('WRONG_DEPLOYMENT_TARGET');
-  const key=JSON.parse(process.env.SUPABASE_DATA_SIGNING_JWK);
+  const key=JSON.parse(process.env.DATA_API_SIGNING_JWK);
   const jwksResponse=await fetch(new URL('/auth/v1/.well-known/jwks.json',service),{signal:AbortSignal.timeout(10000)});
   if(!jwksResponse.ok) throw new Error('KEY_DISCOVERY_FAILED');
   const keys=(await jwksResponse.json()).keys;
@@ -61,7 +61,7 @@ try {
     const books=await request('/rest/v1/books?select=id&limit=1');
     if(!books.ok || (await books.json()).length!==1) throw new Error('LEARNING_ACCESS_VERIFICATION_FAILED');
     let env=readFileSync('.env.local','utf8');
-    for(const [name,value] of [['SUPABASE_DATA_SIGNING_JWK',JSON.stringify(key)],['BETTER_AUTH_DATA_API_READY','true']]) {
+    for(const [name,value] of [['DATA_API_SIGNING_JWK',JSON.stringify(key)]]) {
       const regex=new RegExp(`^${name}=.*$`,'m');const line=`${name}=${value}`;
       env=regex.test(env)?env.replace(regex,line):env.trimEnd()+'\n'+line+'\n';
     }
