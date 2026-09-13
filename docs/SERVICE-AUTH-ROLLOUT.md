@@ -27,6 +27,12 @@
 
 ## 검증 범위
 
+### 원본 연결 점검
+
+`pnpm auth-migration:inspect`는 TLS 인증서 검증을 사용하고, `REPEATABLE READ READ ONLY` 트랜잭션에서 이용권 열·외래 키·정책·권한과 집계 건수만 조회한다. 사용자 행, 인증 토큰, 전화번호, 접속 문자열을 출력하거나 복제하지 않는다. RLS로 일부 행만 보이는 집계를 전체 건수로 오인하지 않도록 `row_security = off`를 설정하고 권한이 부족하면 실패한다.
+
+2026-09-13 원본 접속 설정이 입력된 뒤, Direct connection 호스트가 현재 서비스 프로젝트와 일치함을 확인했다. DNS에는 IPv6 주소만 있었고 현재 실행 환경의 연결은 `ENOTFOUND`로 실패했다. DB 조회는 수행되지 않았다. Connect → Method → Session pooler에서 제공되는 호스트(`…pooler.supabase.com`)와 포트 `5432`를 사용하는 연결 문자열로 교체해야 한다. 사용자 이름도 제공된 문자열을 그대로 사용하고 DB 비밀번호를 채운다. 원본 조사 전까지 실제 이용권 건수·FK·정책은 미확인 상태다.
+
 `pnpm test:service-auth`는 ES256 서명·만료·사용자 결합, Google 요청/외부 Origin/보호 필드 차단, 실제 PostgreSQL에서 새 UUID·타인 이용권·구 발급자·전화번호 버전·이용권 만료/비활성·삭제 세션을 검사한다. 임시 DB에 실제 #26 정책과 새 SQL을 적용하고 합성 자료를 조회한다. 부모 검사 포함 8개이며 HTTP Data API 자체의 서명 검증은 후속이다.
 
 공식 근거는 [Supabase 외부 JWT](https://supabase.com/docs/guides/auth/jwts), [서명 키 가져오기](https://supabase.com/docs/guides/auth/signing-keys)다.
