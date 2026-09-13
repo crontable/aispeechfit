@@ -60,12 +60,12 @@ try {
     if(!crossed.ok || await crossed.json()!==false) throw new Error('SESSION_GUARD_VERIFICATION_FAILED');
     const books=await request('/rest/v1/books?select=id&limit=1');
     if(!books.ok || (await books.json()).length!==1) throw new Error('LEARNING_ACCESS_VERIFICATION_FAILED');
-    let env=readFileSync('.env','utf8');
+    let env=readFileSync('.env.local','utf8');
     for(const [name,value] of [['SUPABASE_DATA_SIGNING_JWK',JSON.stringify(key)],['BETTER_AUTH_DATA_API_READY','true']]) {
       const regex=new RegExp(`^${name}=.*$`,'m');const line=`${name}=${value}`;
       env=regex.test(env)?env.replace(regex,line):env.trimEnd()+'\n'+line+'\n';
     }
-    writeFileSync('.env',env,{mode:0o600});
+    writeFileSync('.env.local',env,{mode:0o600});
     console.log(JSON.stringify({applied:true,selectedTickets:1,liveDataApiVerified:true,localServiceEnabled:true}));
   }
 }catch(e){await remote?.query('rollback').catch(()=>{});const known=['WRONG_DEPLOYMENT_TARGET','KEY_DISCOVERY_FAILED','SIGNING_KEY_NOT_REGISTERED',
