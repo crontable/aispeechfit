@@ -2,23 +2,25 @@
 
 이슈 [#32](https://github.com/crontable/aispeechfit/issues/32)의 **운영 DB·웹·인증 함수 반영과 운영 전화번호 기록 폐기를 완료했다.** 운영 PostgreSQL에서 `better_auth.accounts.provider_account_id(text)`가 존재하고 이전 외부 식별자 열 `account_id(text)`는 없어졌다. `accounts.id`와 `kakao_identities.account_id`의 내부 UUID는 보존했다. `kakao_identities`는 계정 출처 다섯 열만 남았으며 전화번호 확인 이력은 0행이다.
 
-최종 운영 읽기 전용 확인 시각은 **2026-09-14 00:59:14 KST**다. 기존 이용권 계정으로 운영 카카오 로그인 → 학습 목록 → 기능해부학 문항 → 새로고침 → 로그아웃 → 접근 차단 → 재로그인을 실제 브라우저에서 확인했다. 운영 전화번호 폐기 후에도 문항과 새로고침을 확인했다. 두 로컬 DB의 전화번호 자료도 01:09:19 KST까지 폐기했다. 2026-09-14 오후에 카카오 로그인을 **원본 앱 1195231**로 전환했다. 운영자가 실가입자 없음을 확인하고 테스트 앱 계정의 subject 대조·연결을 생략하기로 결정했다. 일반 계정·iOS·Android 실기기 확인은 남아 있으므로 이슈 전체 완료로 표시하지 않는다.
+운영 DB 보존 결과를 읽기 전용으로 확인한 시각은 **2026-09-14 00:59:14 KST**다. 기존 이용권 계정으로 운영 카카오 로그인 → 학습 목록 → 기능해부학 문항 → 새로고침 → 로그아웃 → 접근 차단 → 재로그인을 실제 브라우저에서 확인했다. 운영 전화번호 폐기 후에도 문항과 새로고침을 확인했다. 두 로컬 DB의 전화번호 자료도 01:09:19 KST까지 폐기했다. 2026-09-14 카카오 로그인을 **원본 앱 1195231**로 전환했다. 운영자가 실가입자 없음을 확인하고 테스트 앱 계정의 subject 대조·연결을 생략하기로 결정했다. 일반 계정·iOS·Android 실기기 확인은 남아 있으므로 이슈 전체 완료로 표시하지 않는다.
+
+원본 앱 전환 후 최종 로그인 검증은 진행 중이다. 위의 이전 테스트 앱 로그인 성공을 원본 앱 전환 완료 근거로 사용하지 않는다. 공개 기록에는 코드 변경과 검증 완료 여부를 남기며, 신규 운영 DB 상태와 상세 인증 진단은 공개하지 않는다.
 
 ## 1. 현재 적용된 조합
 
 | 대상 | 실제 상태 | 확인 기준 |
 | --- | --- | --- |
-| 브랜치·앱 코드 | `feat/32-remove-phone-collection`, `75986b7e964876781fd4e31db7c016187523fb32` | 앱·의존성은 검증한 커밋으로 배포했다. 이후 추가한 폐기 SQL·검사·운영 기록은 작업 폴더에 있다. |
+| 브랜치·앱 코드 | `main`, 운영 앱 커밋 `f8b624a8cc00d3e1ec392ffc43942b1af12bf946` | PR #34의 최종 정리 커밋 `005656f`, Netlify 요청 호스트 수정 `6203c23`, OAuth 오류 복귀 수정 `f8b624a`를 main에 반영했다. |
 | Supabase | `bovbypbhuuhasrkwpfld`, 서울, DB `postgres`, PostgreSQL 15.8 | 세션 풀러 5432·프로젝트 사용자·DB와 TLS 인증서를 고정했다. |
-| 운영 Edge | `service-auth-v1`, **버전 6**, ACTIVE | 본문 SHA-256 `c619ea99f92b495620c634a544ca8516b39693df68ab87e3df0c40404ee18892`. 정상 코드 배포 당시 5였고 Secret 정리 후 6으로 갱신됐으며 본문 해시는 같다. |
-| 미리보기 Edge | `service-auth-preview-v1`, **버전 4**, ACTIVE | 본문 SHA-256 `a46a8506168d35ba9b84a2e5523f85cc5ddd0a41d6672571f569babe68375a6b`. 정상 코드 배포 당시 3이었고 최종 조회는 4, 본문 해시는 같다. |
-| 운영 웹 | `6aa6c09c9db8fbe550656322`, 공개 완료 | `https://aispeechfit.crontables.com`, 2026-09-14 00:27:07 KST 공개. |
+| 운영 Edge | `service-auth-v1`, **00:59 조회 버전 6**, ACTIVE | 본문 SHA-256 `c619ea99f92b495620c634a544ca8516b39693df68ab87e3df0c40404ee18892`. 정상 코드 배포 당시 5였고 Secret 정리 후 6으로 갱신됐으며 본문 해시는 같다. |
+| 미리보기 Edge | `service-auth-preview-v1`, **00:59 조회 버전 4**, ACTIVE | 본문 SHA-256 `a46a8506168d35ba9b84a2e5523f85cc5ddd0a41d6672571f569babe68375a6b`. 정상 코드 배포 당시 3이었고 최종 조회는 4, 본문 해시는 같다. |
+| 운영 웹 | main 커밋 `f8b624a`의 production 빌드 | `https://aispeechfit.crontables.com`. main 자동 배포를 재개했으며 최종 사용자 로그인 확인은 진행 중이다. |
 | 미리보기 웹 | `6aa6c2253dd492851755a787`, ready | `https://deploy-preview-30--aispeechfit.netlify.app`, 00:33:34 KST 업로드 확인. 새 PR 번호를 만들거나 이슈 번호를 Origin에 대입하지 않았다. |
-| Netlify 사이트 | `aispeechfit`, `dabab915-aaa1-4163-afcd-e598d29f7d2a` | 현재 공개된 새 배포의 production 잠금은 true다. 기존 main의 구 코드가 변경된 DB 위에 자동 공개되는 것을 막기 위해 유지한다. 사이트 이용 자체는 가능하다. |
-| 카카오 앱 | 원본 앱 `1195231`의 client ID·secret | Supabase Function Secrets `KAKAO_CLIENT_ID`·`KAKAO_CLIENT_SECRET`과 Netlify 사이트 환경 변수 `KAKAO_CLIENT_ID`를 Management API로 갱신했다. 운영·미리보기 웹의 로그인 시작 API가 반환한 카카오 인가 화면이 앱 이름 aispeechfit을 표시하고 KOE 오류가 없음을 확인했고, 운영자가 실제 로그인을 확인했다. 저장소 `.env`의 `KAKAO_CLIENT_ID`는 로컬 개발용 테스트 앱 값으로 둔다. |
+| Netlify 사이트 | `aispeechfit`, `dabab915-aaa1-4163-afcd-e598d29f7d2a` | 빌드 브랜치 main, 자동 빌드 활성, production 공개 잠금 false. main에 현재 DB와 호환되는 코드가 반영됐고 자동 공개를 재개했다. |
+| 카카오 앱 | 원본 앱 `1195231`의 client ID·secret | Supabase Function Secrets `KAKAO_CLIENT_ID`·`KAKAO_CLIENT_SECRET`과 Netlify 사이트 환경 변수 `KAKAO_CLIENT_ID`를 Management API로 갱신했다. 운영·미리보기 웹의 로그인 시작 API가 반환한 카카오 인가 화면이 앱 이름 aispeechfit을 표시하고 KOE 오류가 없음을 확인했다. 최종 서비스 로그인은 별도로 검증한다. 저장소 `.env`의 `KAKAO_CLIENT_ID`는 로컬 개발용 테스트 앱 값으로 둔다. |
 | 종료된 설정 | Supabase `AUTH_PHONE_DATABASE_URL`·`KAKAO_APP_ID`, Netlify 사이트 `KAKAO_APP_ID`, 로컬 대응값 제거 | 기본 DB 연결·공용 인증 secret·서명 키·카카오 client ID/secret과 나머지 설정은 보존했다. |
 
-선행 PR [#31](https://github.com/crontable/aispeechfit/pull/31)은 준비 당시 OPEN이며 기준 `0295438`이 이 브랜치의 조상이었다. 이번 작업에서 새 원격 PR·push·main 병합·이슈 닫기는 수행하지 않았다. **향후 production 잠금 해제 전에는 실제 main에 새 DB 열·전화번호 없는 인증 코드가 포함됐는지 확인하고 해당 배포를 검증해야 한다.**
+2026-09-14 01:50:15 KST에 운영자의 명시적 위임으로 PR [#34](https://github.com/crontable/aispeechfit/pull/34)를 `main`에 병합했다. 병합 커밋은 `30fa4395a712b201ff3292f963c393b2d68200b2`이며 최종 정리 커밋 `005656f`와 선행 변경 `0295438`을 포함한다. 같은 커밋을 포함한 PR [#31](https://github.com/crontable/aispeechfit/pull/31)도 01:50:17에 자동으로 MERGED 처리됐다. 운영 빌드 복귀 과정에서 발견한 주소 문제와 검증 상태는 아래 8절에 기록한다.
 
 ## 2. 운영에서 실행한 순서와 SQL
 
@@ -84,11 +86,12 @@
 
 ## 6. 이어서 처리할 체크리스트
 
-- [x] **1. 원본 앱으로 전환했다.** 2026-09-14 오후에 Supabase Function Secrets `KAKAO_CLIENT_ID`·`KAKAO_CLIENT_SECRET`과 Netlify `KAKAO_CLIENT_ID`를 원본 앱 1195231 값으로 갱신했다. 두 Edge는 같은 Secrets를 읽으므로 운영·미리보기가 함께 바뀌었고 웹 재배포는 필요 없었다. 운영·미리보기의 로그인 시작 API가 반환한 인가 화면의 앱 이름과 redirect_uri를 확인했고 운영자가 실제 로그인을 확인했다.
-- [x] **2. 계정 대조·연결은 생략했다.** `verify-provider-link.mjs`로 원본 앱 인증은 통과했으나 테스트 앱은 callback 저장 뒤에도 KOE006을 반환했다. 운영자가 카카오 실가입자가 없음을 확인하고 대조·연결 없이 전환하기로 결정했다. 테스트 앱 subject로 저장된 `better_auth` 사용자·계정 1건과 그 이용권은 DB에 남아 있으며 원본 앱 로그인은 새 계정을 만든다. 남은 행의 삭제 또는 이용권 이전은 별도로 정한다.
+- [x] **1. 원본 앱으로 전환했다.** 2026-09-14 Supabase Function Secrets `KAKAO_CLIENT_ID`·`KAKAO_CLIENT_SECRET`과 Netlify `KAKAO_CLIENT_ID`를 원본 앱 1195231 값으로 갱신했다. 두 Edge는 같은 Secrets를 읽으므로 운영·미리보기가 함께 바뀌었고 웹 재배포는 필요 없었다. 운영·미리보기의 로그인 시작 API가 반환한 인가 화면의 앱 이름과 redirect_uri를 확인했다. 원본 앱의 서비스 로그인 완료 검증은 남아 있다.
+- [ ] **2. 원본 앱 로그인과 기존 사용자 충돌을 해결한다.** `verify-provider-link.mjs`로 원본 앱 인증은 통과했으나 테스트 앱은 callback 저장 뒤에도 KOE006을 반환했고, 운영자는 실가입자가 없어 대조·연결을 생략하기로 결정했다. 당시의 ‘기존 행을 남기면 원본 앱 로그인은 새 계정을 만든다’는 설명은 잘못됐다. `users.email`은 UNIQUE이고 자동 연결을 금지했으므로 같은 이메일의 사용자만 있고 일치하는 카카오 계정이 없으면 `account_not_linked`로 거부한다. 보존할 UUID·이용권과 적용할 처리 범위를 확인하고 명세에 맞는 절차를 검증한 뒤 실제 로그인을 확인한다.
 - [ ] **3. 일반 계정과 실기기 동선을 확인한다.** 원본 앱의 관리자·테스터가 아닌 계정으로 번호 없는 가입·이용권 없음·로그아웃·재로그인을 확인한다. Android에서 공유 링크 → 카카오 로그인 → 복귀 → 새로고침을 확인하고 iOS는 실제 기기를 확보한 뒤 기록한다. 현재 확인은 데스크톱 브라우저의 기존 이용권 계정이며 실기기 완료로 대신하지 않는다.
 - [x] **4. 두 로컬 DB의 과거 전화번호 사본을 별도로 처리했다.** 실행 직전 55433 `auth_migration`의 전화번호 1개·확인 이력 2행과 55432 `kakao_test`의 전화번호 1개·확인 이력 1행, 다른 연결 0을 재확인했다. 격리 검증 후 승인받은 `supabase/operations/dispose-local-phone-records.sql`을 적용해 각각 2026-09-14 01:09:18.800·01:09:19.229 KST에 COMMIT했다. 운영을 포함한 세 DB에서 전화번호 값 총 3개·확인 이력 총 7행을 폐기했다. 55433의 외부 식별자 열도 검증한 rename migration으로 `provider_account_id`에 맞췄다. 기존 사용자·계정·세션과 55433의 `auth_source.ticket_transfer_candidates` 1행은 보존했다. 로컬 식별 출처는 각각 5개·3개 열로 남았고, PK·UNIQUE·FK와 그 밖의 모든 기존 테이블 행이 같았다. 로컬 폐기 자료의 새 사본은 만들지 않았다.
-- [ ] **5. 임시 callback과 남은 사본을 정리한다.** 이번에 추가한 테스트 앱 1195233의 43932 callback을 제거한다. 대조 도구는 종료했다. 기존 원본 앱의 임시 callback·기존 파일 사본은 소유자와 범위를 확인해 처리한다. 7일 백업은 등록된 기한에 실제 삭제됐는지 확인한다.
+- [x] **5. 임시 callback을 정리했다.** 2026-09-14 원본 앱 1195231의 REST API 키 설정에서 `http://localhost:43932/api/auth/callback/kakao`만 제거하고 저장했다. 다시 열어 운영·기존 미리보기 callback 두 개가 보존됐음을 확인했다. 테스트 앱 1195233에는 해당 임시 주소가 남아 있지 않았다. 대조 도구는 종료 상태이며 다시 실행하지 않았다.
+- [ ] **6. 복구 백업의 기한 폐기를 확인한다.** 자동 작업 `32`가 ACTIVE이며 2026-09-20 23:43 KST에 승인된 백업 폴더만 처리하도록 등록되어 있다. 아직 만료 전이므로 자료를 보존한다. 실제 삭제 결과가 확인된 뒤 체크한다.
 
 ## 7. 재현·검토 명령
 
@@ -107,4 +110,15 @@ git diff --check
 
 Secret 삭제는 [Supabase의 이름 지정 삭제 API](https://supabase.com/docs/reference/api/v1-bulk-delete-secrets)와 [Netlify의 사이트 범위 환경 변수 API](https://open-api.netlify.com/#operation/deleteEnvVar)를 사용했다. 함수·API 장애는 [Supabase 로그 조회 명세](https://supabase.com/docs/guides/observability/advanced-log-filtering)에 따라 필요한 시각·실패 단계·경로·상태만 확인했다. 공개 기록에는 개인정보 원문·쿠키·토큰·연결 비밀번호를 남기지 않는다.
 
-공개 이슈에 내부 운영 메타데이터를 포함한 상세 본문을 보내는 요청은 자동 승인 검토에서 공개 범위 확인을 이유로 거부됐다. 상세 적용 자료는 이 문서에 보존하고 공개 본문을 완료 여부·변경 파일·실패 원인·남은 절차로 줄여 2026-09-14 01:15:01 KST에 갱신한 뒤 다시 읽어 일치를 확인했다. 운영 검증 탭을 정리하고 이번 작업의 43932번 임시 서버가 종료됐음을 확인했다. 테스트 앱 callback 입력은 저장하지 않았으며 승인 대기 상태다.
+공개 이슈에 내부 운영 메타데이터를 포함한 상세 본문을 보내는 요청은 자동 승인 검토에서 공개 범위 확인을 이유로 거부됐다. 상세 적용 자료는 이 문서에 보존하고 공개 본문을 완료 여부·변경 파일·실패 원인·남은 절차로 줄여 2026-09-14 01:15:01 KST에 갱신한 뒤 다시 읽어 일치를 확인했다. 운영 검증 탭을 정리하고 이번 작업의 43932번 임시 서버가 종료됐음을 확인했다. 당시의 계정 대조·callback 승인 대기는 원본 앱 전환 결정과 위 5번의 임시 설정 정리로 종료됐다.
+
+## 8. main 운영 빌드 복귀
+
+- [x] **1. main 반영과 자동 배포를 재개했다.** 운영자의 명시적 위임에 따라 PR #34를 main에 병합했고 선행 PR #31도 자동 병합 처리됐다. 전화번호 제거 코드와 `provider_account_id` 매핑이 main에 포함됐으며 Netlify의 main 자동 빌드·공개를 재개했다.
+- [x] **2. 요청 호스트 재사용을 재현하고 수정했다.** Netlify Next 어댑터는 첫 요청의 hostname으로 만든 서버를 재사용하며 Next도 그 hostname으로 요청 URL을 만든다. 설치된 `NextNodeServer.attachRequestMeta`로 재현했다. `lib/service/transport.ts`에서 같은 사이트의 main 별칭과 실제 운영 Host가 함께 일치하는 경우를 처리하도록 고쳤다. 외부 Host·Origin·위조 전달 헤더 차단을 포함한 `tests/edge-auth/proxy.test.ts` 6/6, 린트와 `pnpm test:public-build`가 통과했다. `6203c23`으로 커밋·push·main 반영을 완료했다.
+- [x] **3. callback 오류 복귀 처리를 수정했다.** 로그인 시작과 Edge가 허용하는 `/sign-in`을 웹 프록시의 callback 응답에도 허용했다. 동일 Origin 검사는 유지하고 인증값·상세 설명을 제거한 오류 코드만 전달한다. 중복 error 처리·민감값 제거·외부 Origin 차단을 포함한 `tests/edge-auth/proxy.test.ts` 7/7, 린트·TypeScript 검사가 통과했다. `f8b624a`로 커밋·push·main 반영과 production 빌드를 완료했다.
+- [ ] **4. 원본 앱의 최종 로그인 완료를 확인한다.** 새 로그인 → 세션 생성 → 본인 이용권 판정 → 새로고침 → 로그아웃·접근 차단 → 재로그인을 실제 브라우저에서 확인한다. 현재 사용자 확인이 필요한 처리 범위가 남아 있으므로 완료로 표시하지 않는다. 자동 이메일 연결 금지와 사용자·이용권 보존 기준을 유지한다.
+
+PR #34의 미리보기 빌드는 성공 근거에 포함하지 않는다. `scripts/check-env.mjs`의 미리보기 Origin 일치 검사가 새 PR 주소와 기존 설정 주소의 차이를 거부했다. 최종 main production 빌드와 구분하며 출처 검사를 완화하지 않는다.
+
+운영 기록만 추가하는 문서 커밋에는 `[skip netlify]`를 사용한다. 해당 문서 커밋의 재배포만 생략하며 사이트 자동 빌드 설정은 유지한다. 적용 방식은 [Netlify의 배포 생략 명세](https://docs.netlify.com/deploy/manage-deploys/manage-deploys-overview/#skip-a-deploy)에 따른다.
