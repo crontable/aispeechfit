@@ -34,4 +34,9 @@ export default defineConfig([
       '@typescript-eslint/no-unused-vars': 'warn',
     },
   },
+  {
+    files: ['lib/kakao-test/**/*.ts', 'scripts/kakao-test/**/*.mjs', 'tests/kakao-test/**/*.ts'],
+    // Node 24의 내장 TypeScript 실행기는 상대 import의 확장자를 요구한다.
+    rules: { 'import/extensions': ['error', 'ignorePackages', { ts: 'always' }] },
+  },
 ]);

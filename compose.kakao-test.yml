@@ -1,0 +1,19 @@
+name: aispeechfit-kakao-test
+services:
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: kakao_test
+      POSTGRES_DB: kakao_test
+      POSTGRES_PASSWORD: ${KAKAO_TEST_DB_PASSWORD:?Run pnpm kakao:setup first}
+    ports:
+      - "127.0.0.1:55432:5432"
+    volumes:
+      - kakao-test-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U kakao_test -d kakao_test"]
+      interval: 2s
+      timeout: 3s
+      retries: 20
+volumes:
+  kakao-test-data:
