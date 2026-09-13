@@ -1,0 +1,19 @@
+name: aispeechfit-auth-migration
+services:
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: auth_migration
+      POSTGRES_DB: auth_migration
+      POSTGRES_PASSWORD: ${AUTH_MIGRATION_DB_PASSWORD:?Run pnpm auth-migration:setup first}
+    ports:
+      - "127.0.0.1:55433:5432"
+    volumes:
+      - auth-migration-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U auth_migration -d auth_migration"]
+      interval: 2s
+      timeout: 3s
+      retries: 20
+volumes:
+  auth-migration-data:
