@@ -1,9 +1,9 @@
 import { type NextRequest, NextResponse } from 'next/server';
-import { updateSession } from '@/utils/supabase/middleware';
 
 export async function proxy(request: NextRequest) {
-  if (request.nextUrl.pathname === '/dev/kakao') return NextResponse.next();
-  return updateSession(request);
+  if (request.nextUrl.pathname === '/') return NextResponse.redirect(new URL('/study', request.url));
+  // Every protected page and API checks the database session itself.
+  return NextResponse.next();
 }
 
 export const config = {

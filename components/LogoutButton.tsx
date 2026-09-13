@@ -1,6 +1,6 @@
 'use client';
 
-import { createClient } from '@/utils/supabase/client';
+import { authClient } from '@/lib/auth/client';
 import { Button } from '@/components/ui/button';
 import { LogOut } from 'lucide-react';
 import { toast } from 'sonner';
@@ -19,12 +19,11 @@ export default function LogoutButton({
   showIcon = true,
   showText = false,
 }: LogoutButtonProps) {
-  const supabase = createClient();
   const router = useRouter();
 
   async function signOut() {
     try {
-      const { error } = await supabase.auth.signOut();
+      const { error } = await authClient.signOut();
 
       if (error) {
         toast.error(error.message || '로그아웃 중 오류가 발생했습니다');
@@ -33,6 +32,7 @@ export default function LogoutButton({
 
       toast.success('로그아웃 되었습니다');
       router.replace('/sign-in');
+      router.refresh();
     } catch (err) {
       const message = err instanceof Error ? err.message : '로그아웃 중 오류가 발생했습니다';
       toast.error(message);

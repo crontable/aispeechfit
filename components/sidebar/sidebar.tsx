@@ -9,7 +9,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import type { User } from '@supabase/supabase-js';
+type DisplayUser = { name: string; email: string; image?: string | null };
 
 import { useSidebar } from "@/components/sidebar/sidebar-provider";
 import { ThemeSwitcher } from "../theme-switcher";
@@ -31,7 +31,7 @@ export interface SidebarItem {
 interface Props {
   title?: string;
   items: SidebarItem[];
-  userData?: User | null;
+  userData?: DisplayUser | null;
 }
 
 export function Sidebar({ items, title, userData }: Props) {
@@ -107,11 +107,11 @@ export function Sidebar({ items, title, userData }: Props) {
       {userData && (
         <div className="mt-auto border-t p-4 flex items-center justify-between">
           <div className="flex items-center space-x-3">
-            {userData.user_metadata?.avatar_url && (
+            {userData.image && (
               <div className="relative w-10 h-10 rounded-full overflow-hidden">
                 <Image
-                  src={userData.user_metadata.avatar_url}
-                  alt={userData.user_metadata.user_name || '사용자'}
+                  src={userData.image}
+                  alt={userData.name || '사용자'}
                   fill
                   sizes="40px"
                   unoptimized
@@ -121,7 +121,7 @@ export function Sidebar({ items, title, userData }: Props) {
             )}
             <div className="flex flex-col">
               <span className="font-medium text-sm">
-                {userData.user_metadata?.user_name || userData.user_metadata?.name || userData.email}
+                {userData.name || userData.email}
               </span>
               <span className="text-xs text-muted-foreground">
                 {userData.email}

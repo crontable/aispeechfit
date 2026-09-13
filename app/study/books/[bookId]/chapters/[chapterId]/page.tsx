@@ -1,8 +1,7 @@
 import ReversibleCard from "@/components/ReversibleCard";
 import { ConditionalSidebarToggle } from "@/components/conditional-sidebar-toggle";
 import { convertToReversibleCardQuestions } from "@/lib/converter";
-import { createClient } from "@/utils/supabase/server";
-import { redirect } from "next/navigation";
+import { requireStudyAccess } from "@/lib/auth/access";
 
 // 페이지 매개변수의 타입 정의
 type PageParams = Promise<{
@@ -14,15 +13,7 @@ export default async function ChapterPage({ params }: { params: PageParams }) {
   // 명시적으로 params에서 값 추출
   const { chapterId } = await params;
 
-  const supabase = await createClient();
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) {
-    return redirect("/sign-in");
-  }
+  const { client: supabase } = await requireStudyAccess();
 
   // 해당 챕터 정보 조회
   const { data: chapter, error: chapterError } = await supabase

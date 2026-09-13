@@ -4,14 +4,14 @@ import { Sidebar, SidebarItem } from '@/components/sidebar/sidebar';
 import { Book } from '@/domain/types';
 import { BooksProvider } from '@/components/providers/books-provider';
 import { convertBooks } from '@/lib/converter';
-import { createClient } from '@/utils/supabase/server';
+import { requireStudyAccess } from '@/lib/auth/access';
 import { MainContent } from '@/components/main-content';
 
-export default async function Layout({ children }: { children: React.ReactNode }) {
-  const supabase = await createClient();
+export const dynamic = 'force-dynamic';
 
-  // 현재 로그인한 사용자 정보 가져오기
-  const { data: { user } } = await supabase.auth.getUser();
+export default async function Layout({ children }: { children: React.ReactNode }) {
+  const { session, client: supabase } = await requireStudyAccess();
+  const user = { name: session.user.name, email: session.user.email, image: session.user.image };
 
   // Books 테이블 raw data 조회
   const { data: bookDTOs, error: fetchingBookError } = await supabase
