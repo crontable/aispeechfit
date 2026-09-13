@@ -29,7 +29,7 @@ export async function readLimitedBody(request: Request) {
 }
 
 export function isServiceRoute(path: string, method: string) {
-  if (method === 'POST') return ['/api/auth/sign-in/social', '/api/auth/sign-out', '/api/auth/update-user', '/api/kakao/verify'].includes(path);
+  if (method === 'POST') return ['/api/auth/sign-in/social', '/api/auth/sign-out', '/api/auth/update-user'].includes(path);
   return method === 'GET' && (['/api/auth/callback/kakao', '/api/auth/error', '/api/service/access', '/api/service/books'].includes(path)
     || /^\/api\/service\/books\/[1-9]\d*\/chapters\/[1-9]\d*$/.test(path));
 }

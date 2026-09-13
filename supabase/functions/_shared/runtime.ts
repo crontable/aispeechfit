@@ -12,12 +12,11 @@ export function createEdgeRuntime(env: Environment, publicOrigin: string) {
     ssl: config.local ? undefined : { rejectUnauthorized: true, ca: SUPABASE_CA },
     options: '-c search_path=better_auth,pg_catalog -c statement_timeout=8000' };
   const authPool = new Pool({ ...options, connectionString: config.databaseUrl });
-  const pool = new Pool({ ...options, connectionString: config.phoneDatabaseUrl });
   const auth = createKakaoAuth(authPool, config);
   let readyUntil = 0;
   let readiness: Promise<void> | undefined;
   return {
-    config, authPool, pool, auth, appId: config.appId,
+    config, authPool, auth,
     async data(session: DataSession) {
       const token = await issueDataToken(session, config.signingJwk);
       return createClient<Database>(config.dataUrl, config.publicKey, {
@@ -31,7 +30,6 @@ export function createEdgeRuntime(env: Environment, publicOrigin: string) {
       readiness ??= (async () => {
         await loadSigningKey(config.signingJwk);
         await Promise.all([authPool.query('select 1 from better_auth.users limit 0'),
-          pool.query('select 1 from better_auth.kakao_identities limit 0'),
           authPool.query('select 1 from better_auth.request_limits limit 0')]);
         readyUntil = Date.now() + 15000;
       })();
