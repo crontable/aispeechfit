@@ -10,7 +10,12 @@ export function serviceCookie(headers: Headers) {
 
 export async function forwardServiceRequest(request: Request, fetchService = fetch, config = getServiceConfig()) {
   const url = new URL(request.url);
-  if (url.origin !== config.origin && url.origin !== config.deploymentOrigin) {
+  // Netlify의 Next 서버는 첫 요청의 main 별칭을 이후 요청 URL에도 재사용한다.
+  // 이 경우에만 실제 Host가 고정된 운영 호스트와 일치하는지 함께 확인한다.
+  const mainAlias = config.deploymentOrigin?.replace(/^https:\/\/[a-f0-9]{24}--/, 'https://main--');
+  const netlifyMainRequest = url.origin === mainAlias
+    && request.headers.get('host') === new URL(config.origin).host;
+  if (url.origin !== config.origin && url.origin !== config.deploymentOrigin && !netlifyMainRequest) {
     console.error(JSON.stringify({ event: 'service_origin_mismatch', requestOrigin: url.origin, configuredOrigin: config.origin }));
     return serviceJson({ error: 'invalid_host' }, 403);
   }

@@ -54,6 +54,34 @@ test('proxy rejects forged host/origin and exposes only safe errors on upstream 
   assert.deepEqual(await response.json(), { error: 'service_unavailable' });
 });
 
+test('Netlify가 첫 main 별칭을 재사용해도 실제 운영 Host와 Origin을 함께 검사한다', async () => {
+  const pinned = { ...config, deploymentOrigin: 'https://0123456789abcdef01234567--fixture.netlify.app' };
+  const mainAlias = 'https://main--fixture.netlify.app';
+  let calls = 0;
+  const upstream: typeof fetch = async (input) => {
+    calls++;
+    assert.equal(input, config.functionUrl + '/api/auth/sign-out');
+    return Response.json({ success: true });
+  };
+  const request = (origin: string, headers: Record<string, string>) => new Request(origin + '/api/auth/sign-out', {
+    method: 'POST', headers,
+  });
+  const canonical = { host: new URL(config.origin).host, origin: config.origin };
+  assert.equal((await forwardServiceRequest(request(mainAlias, canonical), upstream, pinned)).status, 200);
+  const rejected = [
+    request(mainAlias, { origin: config.origin }),
+    request(mainAlias, { ...canonical, host: 'attacker.example' }),
+    request(mainAlias, { ...canonical, origin: 'https://attacker.example' }),
+    request(mainAlias, { origin: config.origin, 'x-forwarded-host': canonical.host }),
+    request('https://main--other-site.netlify.app', canonical),
+    request('https://attacker.example', canonical),
+  ];
+  const responses = await Promise.all(rejected.map(value => forwardServiceRequest(value, upstream, pinned)));
+  assert.ok(responses.every(response => response.status === 403));
+  assert.equal(calls, 1);
+  assert.equal((await forwardServiceRequest(request(mainAlias, canonical), upstream, config)).status, 403);
+});
+
 test('production proxy configuration needs public URLs only and refuses arbitrary upstream hosts', () => {
   const env = { NODE_ENV: 'production' as const, BETTER_AUTH_URL: config.origin, AUTH_FUNCTION_URL: config.functionUrl };
   assert.deepEqual(getServiceConfig(env), config);
