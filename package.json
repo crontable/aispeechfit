@@ -30,6 +30,9 @@
     "test:auth-schema": "node --env-file=.env.local --test tests/auth-schema/*.test.ts",
     "auth-schema:evidence": "node --env-file=.env.local scripts/auth-schema/evidence.mjs",
     "auth-schema:apply": "node --env-file=.env.local scripts/auth-schema/apply.mjs",
+    "auth-schema:runtime": "node --env-file=.env.local scripts/auth-schema/provision-runtime.mjs",
+    "auth-schema:preflight": "node --env-file=.env.local scripts/auth-schema/cutover.mjs",
+    "auth-schema:cutover": "node --env-file=.env.local scripts/auth-schema/cutover.mjs --apply",
     "test:service-auth": "node --env-file=.env.local --test --test-concurrency=1 tests/service-auth/*.test.ts"
   },
   "dependencies": {
