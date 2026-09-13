@@ -1,4 +1,9 @@
-export function getServiceConfig(env = process.env) {
+export function getServiceConfig(env = {
+  NODE_ENV: process.env.NODE_ENV,
+  EDGE_LOCAL_TEST: process.env.EDGE_LOCAL_TEST,
+  BETTER_AUTH_URL: process.env.BETTER_AUTH_URL,
+  AUTH_FUNCTION_URL: process.env.AUTH_FUNCTION_URL,
+}) {
   const local = env.NODE_ENV !== 'production' && env.EDGE_LOCAL_TEST === 'true';
   const origin = new URL(env.BETTER_AUTH_URL ?? '');
   const functionUrl = new URL(env.AUTH_FUNCTION_URL ?? '');

@@ -10,7 +10,10 @@ export function serviceCookie(headers: Headers) {
 
 export async function forwardServiceRequest(request: Request, fetchService = fetch, config = getServiceConfig()) {
   const url = new URL(request.url);
-  if (url.origin !== config.origin) return serviceJson({ error: 'invalid_host' }, 403);
+  if (url.origin !== config.origin) {
+    console.error(JSON.stringify({ event: 'service_origin_mismatch', requestOrigin: url.origin, configuredOrigin: config.origin }));
+    return serviceJson({ error: 'invalid_host' }, 403);
+  }
   if (!isServiceRoute(url.pathname, request.method)) return serviceJson({ error: 'not_found' }, 404);
   const origin = request.headers.get('origin');
   if ((request.method === 'POST' && origin !== config.origin) || (origin && origin !== config.origin)) return serviceJson({ error: 'invalid_origin' }, 403);
