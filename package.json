@@ -25,6 +25,7 @@
     "auth-migration:db": "docker compose --env-file .env.local -f compose.auth-migration.yml up -d --wait",
     "auth-migration:snapshot": "node --env-file=.env.local scripts/auth-migration/snapshot.mjs",
     "auth-migration:inspect": "node --env-file=.env.local scripts/auth-migration/inspect.mjs",
+    "auth-migration:prepare-ticket": "node --env-file=.env.local scripts/auth-migration/prepare-ticket.mjs",
     "test:auth-migration": "node --env-file=.env.local --test tests/auth-migration/*.test.mjs",
     "test:auth-schema": "node --env-file=.env.local --test tests/auth-schema/*.test.ts",
     "auth-schema:evidence": "node --env-file=.env.local scripts/auth-schema/evidence.mjs",

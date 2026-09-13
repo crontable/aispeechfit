@@ -27,6 +27,12 @@ try {
     conname AS name, pg_get_constraintdef(oid) AS definition FROM pg_constraint
     WHERE contype = 'f' AND (confrelid = 'auth.users'::regclass
       OR conrelid = 'public.tickets'::regclass) ORDER BY conrelid, conname`)).rows;
+  report.ticketDependents = (await client.query(`SELECT conrelid::regclass::text AS relation,
+    conname AS name, pg_get_constraintdef(oid) AS definition FROM pg_constraint
+    WHERE contype = 'f' AND confrelid = 'public.tickets'::regclass ORDER BY conrelid, conname`)).rows;
+  report.ticketTriggers = (await client.query(`SELECT tgname AS name,
+    pg_get_triggerdef(oid) AS definition FROM pg_trigger
+    WHERE tgrelid = 'public.tickets'::regclass AND NOT tgisinternal ORDER BY tgname`)).rows;
   report.policies = (await client.query(`SELECT schemaname, tablename, policyname,
     permissive, roles, cmd, qual, with_check FROM pg_policies WHERE schemaname = 'public'
     AND tablename IN ('tickets', 'books', 'chapters', 'questions') ORDER BY tablename, policyname`)).rows;
