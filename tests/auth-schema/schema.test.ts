@@ -3,11 +3,13 @@ import { randomUUID } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { test } from 'node:test';
 import { Pool } from 'pg';
+import { trackPoolShutdown } from '../edge-auth/pool-cleanup.ts';
 import { betterAuth } from 'better-auth';
 import { getMigrations } from 'better-auth/db/migration';
 import { authSchemaOptions } from '../../lib/auth/schema-options.ts';
 
 const migration = readFileSync('supabase/migrations/20260913000000_create_better_auth.sql', 'utf8');
+const rename = readFileSync('supabase/migrations/20260913050000_rename_provider_account_id.sql', 'utf8');
 const rollback = readFileSync('supabase/rollback/20260913000000_create_better_auth.sql', 'utf8');
 
 test('new authentication schema on isolated PostgreSQL', async (t) => {
@@ -17,22 +19,27 @@ test('new authentication schema on isolated PostgreSQL', async (t) => {
   assert.equal(url.pathname, '/auth_migration');
   assert.equal(url.search, '');
   const admin = new Pool({ connectionString: url.href, max: 1 });
+  const closeAdmin = trackPoolShutdown(admin);
   const suffix = randomUUID().replaceAll('-', '');
   const database = `auth_schema_${suffix}`;
   const reader = `auth_reader_${suffix}`;
-  let pool: Pool | undefined;
+  let closePool: (() => Promise<void>) | undefined;
   try {
     await admin.query(`create database ${database}`);
     url.pathname = `/${database}`;
-    pool = new Pool({ connectionString: url.href, options: '-c search_path=better_auth,pg_catalog', max: 1 });
+    const pool = new Pool({ connectionString: url.href, options: '-c search_path=better_auth,pg_catalog', max: 1 });
+    closePool = trackPoolShutdown(pool);
     const db = pool;
+    // Better Auth starts its schema check at construction; finish DDL first.
+    await db.query(migration);
+    await db.query(migration);
+    await db.query(rename);
+    await db.query(rename);
     const auth = betterAuth({ ...authSchemaOptions, database: db,
       baseURL: 'http://localhost:3000', secret: 'synthetic-schema-test-secret-32-characters',
       emailAndPassword: { enabled: true }, logger: { disabled: true }, telemetry: { enabled: false },
     });
     await t.test('migration is repeatable and matches the Better Auth schema', async () => {
-      await db.query(migration);
-      await db.query(migration);
       const plan = await getMigrations(auth.options);
       assert.deepEqual(plan.toBeCreated, []);
       assert.deepEqual(plan.toBeAdded, []);
@@ -65,12 +72,12 @@ test('new authentication schema on isolated PostgreSQL', async (t) => {
     const session = randomUUID();
     await db.query(`insert into better_auth.users (id,name,email,email_verified) values
       ($1,'A','a@example.com',true),($2,'B','b@example.com',true)`, [user, other]);
-    await db.query(`insert into better_auth.accounts (id,user_id,provider_id,account_id,updated_at)
+    await db.query(`insert into better_auth.accounts (id,user_id,provider_id,provider_account_id,updated_at)
       values ($1,$2,'kakao','123',now())`, [account, user]);
     await db.query(`insert into better_auth.sessions (id,user_id,token,expires_at,updated_at)
       values ($1,$2,'synthetic-session',now()+interval '1 hour',now())`, [session, user]);
     await t.test('provider subject cannot be assigned twice', async () => {
-      await assert.rejects(db.query(`insert into better_auth.accounts (user_id,provider_id,account_id,updated_at)
+      await assert.rejects(db.query(`insert into better_auth.accounts (user_id,provider_id,provider_account_id,updated_at)
         values ($1,'kakao','123',now())`, [other]), { code: '23505' });
     });
     await t.test('Kakao identity must match account user and provider subject', async () => {
@@ -116,9 +123,10 @@ test('new authentication schema on isolated PostgreSQL', async (t) => {
       await db.query(migration);
     });
   } finally {
-    await pool?.end();
-    await admin.query(`drop database if exists ${database} with (force)`);
-    await admin.query(`drop role if exists ${reader}`);
-    await admin.end();
+    try {
+      await closePool?.();
+      await admin.query(`drop database if exists ${database}`);
+      await admin.query(`drop role if exists ${reader}`);
+    } finally { await closeAdmin(); }
   }
 });

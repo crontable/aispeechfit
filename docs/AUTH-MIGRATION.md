@@ -43,23 +43,23 @@
 | 정규화된 이름 | 책임 및 핵심 열 |
 | --- | --- |
 | `better_auth.users` | 서비스 사용자의 인증 기준. `id uuid`, `name`, `email`, `email_verified`, `image`, `created_at`, `updated_at` |
-| `better_auth.accounts` | 제공자 계정과 사용자 연결. `id uuid`, `user_id uuid`, `provider_id`, `account_id`, `access_token`, `refresh_token`, `id_token`, `access_token_expires_at`, `refresh_token_expires_at`, `scope`, `password`, `created_at`, `updated_at` |
+| `better_auth.accounts` | 제공자 계정과 사용자 연결. `id uuid`, `user_id uuid`, `provider_id`, `provider_account_id`, `access_token`, `refresh_token`, `id_token`, `access_token_expires_at`, `refresh_token_expires_at`, `scope`, `password`, `created_at`, `updated_at` |
 | `better_auth.sessions` | Better Auth 세션. `id uuid`, `user_id uuid`, `token`, `expires_at`, `ip_address`, `user_agent`, `created_at`, `updated_at` |
 | `better_auth.verifications` | Better Auth의 일회성 검증 데이터. `id uuid`, `identifier`, `value`, `expires_at`, `created_at`, `updated_at`. 카카오 전화번호 확인 상태와 구분한다 |
 | `better_auth.kakao_identities` | 카카오 API로 확인한 신뢰 데이터. `user_id uuid`, `account_id uuid`, `app_id text`, `subject text`, `phone_e164 text`, `status`, `version`, `checked_at` |
 | `better_auth.kakao_session_checks` | 현재 로그인 세션이 확인한 카카오 정보 버전. `session_id uuid`, `user_id uuid`, `identity_version`, `checked_at` |
 | `public.tickets` | 기존 서비스 이용권. `user_id`, `is_active`, `started_at`, `expires_at`를 유지한다 |
 
-`accounts.account_id`는 Better Auth의 제공자 subject를 저장하는 text 열이고, `kakao_identities.account_id`는 로컬 `accounts.id`를 참조하는 uuid 열이다. DDL 및 애플리케이션 타입에서 이 구분을 명시한다. 카카오 subject는 앱 ID와 함께 식별한다. 개발 앱과 운영 앱은 인증 DB 및 설정을 분리한다.
+이슈 #32 S3의 이름 정정·적용 순서·복원·검증은 [PHONE-REMOVAL-S3.md](PHONE-REMOVAL-S3.md)를 따른다. `accounts.provider_account_id`는 Better Auth의 제공자 subject를 저장하는 text 열이고, `kakao_identities.account_id`는 로컬 `accounts.id`를 참조하는 uuid 열이다. DDL 및 애플리케이션 타입에서 이 구분을 명시한다. 카카오 subject는 앱 ID와 함께 식별한다. 개발 앱과 운영 앱은 인증 DB 및 설정을 분리한다.
 
 ### 핵심 제약
 
 아래 1번의 기존 UUID 보존은 기존 사용자 이관을 선택할 때의 규칙이다. 현재 신규 시작 계획에서는 새 UUID를 사용하고 위 실행 계획대로 본인 이용권을 연결한다. 7번의 이용권 행 보존 역시 현재 계획의 재연결 또는 재발급 절차를 따른다. 나머지 인증 무결성 제약은 계속 적용한다.
 
 1. `users.id`는 기존 `auth.users.id`를 그대로 사용한다. 기존 사용자에게 새 UUID를 생성하지 않는다. 신규 사용자만 UUID를 생성한다.
-2. `accounts.user_id`와 `sessions.user_id`는 `users.id`를 참조하고 인덱스를 둔다. 한 사용자에게 Google·Kakao 등 여러 account를 연결할 수 있다. 동일 제공자 subject가 여러 사용자에게 연결되지 않도록 `accounts(provider_id, account_id)`에 유일성을 둔다.
+2. `accounts.user_id`와 `sessions.user_id`는 `users.id`를 참조하고 인덱스를 둔다. 한 사용자에게 Google·Kakao 등 여러 account를 연결할 수 있다. 동일 제공자 subject가 여러 사용자에게 연결되지 않도록 `accounts(provider_id, provider_account_id)`에 유일성을 둔다.
 3. `sessions.token`은 유일해야 하며, 만료 시각으로 유효성을 판정한다. 시간 열은 저장소 규칙에 따라 `timestamptz`를 사용한다. 필수 여부와 기본값은 설치된 Better Auth 버전의 생성 DDL 및 실제 원본의 null 값을 대조하여 확정한다.
-4. `kakao_identities.user_id`는 사용자당 한 행인 기본 키다. `UNIQUE(app_id, subject)`와 `UNIQUE(account_id)`를 두며 `(account_id, user_id, provider_id, subject)`를 `accounts(id, user_id, provider_id, account_id)`에 복합 외래 키로 연결한다. provider_id는 kakao로 제한한다. 앱 ID는 형식만 DB에서 검사하며, 실제 응답과 설정 앱의 일치는 서버가 검증한다. 번호·연결·상태 변경 시 버전 증가와 버전 감소 금지는 DB 트리거로 강제한다.
+4. `kakao_identities.user_id`는 사용자당 한 행인 기본 키다. `UNIQUE(app_id, subject)`와 `UNIQUE(account_id)`를 두며 `(account_id, user_id, provider_id, subject)`를 `accounts(id, user_id, provider_id, provider_account_id)`에 복합 외래 키로 연결한다. provider_id는 kakao로 제한한다. 앱 ID는 형식만 DB에서 검사하며, 실제 응답과 설정 앱의 일치는 서버가 검증한다. 번호·연결·상태 변경 시 버전 증가와 버전 감소 금지는 DB 트리거로 강제한다.
 5. `kakao_session_checks.session_id`는 기본 키다. `(session_id, user_id)`를 `sessions(id, user_id)`에 복합 외래 키로 연결하고, `user_id`를 `kakao_identities.user_id`에 연결한다. 이를 위해 sessions에 대응하는 복합 UNIQUE를 둔다. 세션 삭제 시 해당 확인 행은 함께 삭제한다. `identity_version`은 요청 시 현재 버전과 일치해야 하며, 변경 시 과거 세션의 확인 결과가 다시 유효해지지 않도록 버전을 단조 증가시킨다.
 6. `phone_e164`는 confirmed일 때만 존재하도록 CHECK 제약을 둔다. 전화번호 자체에는 사용자 고유 키 역할을 부여하지 않는다. 조회 경합은 사용자별 직렬화 또는 요청 세대 번호로 제어하고, 재조회 실패·철회·변경 시 기존 확인을 무효화한다. 일반 사용자 수정 API에는 이 테이블의 쓰기 경로를 제공하지 않는다.
 7. `public.tickets.user_id`는 이관 후 `better_auth.users.id`를 참조한다. 사용자 UUID와 이용권 행 값은 유지한다. 기존 외래 키 이름·삭제 정책은 원본 카탈로그에서 확인하며, 티켓 보존을 위한 새 참조는 `ON DELETE RESTRICT`를 기본 설계로 한다. 계정 삭제 정책과 다른 경우 적용 전에 명시적으로 조정한다.
@@ -73,7 +73,7 @@
 | `auth.users.created_at`, `updated_at` | `users.created_at`, `updated_at`. 원본의 정밀도와 null 허용 여부를 검증한다 |
 | `auth.users.raw_user_meta_data` | 원본 전체 보존. 실제 존재하는 이름·이미지 필드만 명시적 규칙으로 `users.name`, `users.image`에 매핑한다 |
 | `auth.identities.user_id` | `accounts.user_id`에 동일 UUID |
-| `auth.identities.provider`와 제공자 식별자 | `accounts.provider_id`, `accounts.account_id`. identity 행의 자체 id와 제공자 subject를 구분한다. 실제 열 및 identity_data 구조를 대조한다 |
+| `auth.identities.provider`와 제공자 식별자 | `accounts.provider_id`, `accounts.provider_account_id`. identity 행의 자체 id와 제공자 subject를 구분한다. 실제 열 및 identity_data 구조를 대조한다 |
 | `auth.identities.id` | UUID 호환 여부를 확인해 account 기본 키로 보존하거나, 별도 매핑으로 원본 identity와 연결한다. 사용자 UUID 보존과 별개다 |
 | 기존 암호 해시 | 비밀번호 계정이 실제 존재하면 `accounts.password`로 변환하기 전에 검증기 호환성을 시험한다 |
 | 차단·삭제·제한 상태 | 원본에 보존하고 운영 로그인/세션 검사에도 반영한다. 실제 상태 조사 후 Better Auth 플러그인 또는 전용 상태 필드로 매핑하며, 미반영 사용자를 활성 상태로 이관하지 않는다 |

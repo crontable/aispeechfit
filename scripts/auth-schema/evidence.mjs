@@ -44,7 +44,7 @@ try {
       JOIN better_auth.kakao_identities i ON i.user_id = c.user_id AND i.version = c.identity_version
       WHERE i.status = 'confirmed' AND i.app_id = $1) AS checked_active_sessions,
     (SELECT count(*)::int FROM better_auth.kakao_identities i JOIN better_auth.accounts a ON a.user_id = i.user_id
-      WHERE a.provider_id = 'kakao' AND (i.app_id <> $1 OR i.subject <> a.account_id)) AS binding_mismatches`,
+      WHERE a.provider_id = 'kakao' AND (i.app_id <> $1 OR i.subject <> a.provider_account_id)) AS binding_mismatches`,
     [config.appId],
   );
   console.log(

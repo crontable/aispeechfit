@@ -12,6 +12,7 @@ try {
       "utf8",
     ),
   );
+  await client.query(readFileSync('supabase/migrations/20260913050000_rename_provider_account_id.sql', 'utf8'));
   console.log("Local better_auth schema ready.");
 } catch {
   console.error("Local auth schema setup failed.");

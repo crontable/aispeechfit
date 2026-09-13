@@ -7,11 +7,6 @@ export type Json =
   | Json[]
 
 export type Database = {
-  // Allows to automatically instantiate createClient with right options
-  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
-  __InternalSupabase: {
-    PostgrestVersion: "12.2.12 (cd3cf9e)"
-  }
   public: {
     Tables: {
       books: {
@@ -159,10 +154,7 @@ export type Database = {
     }
     Functions: {
       has_active_ticket: { Args: never; Returns: boolean }
-      has_valid_auth_session: {
-        Args: { require_phone?: boolean }
-        Returns: boolean
-      }
+      has_valid_auth_session: { Args: never; Returns: boolean }
     }
     Enums: {
       [_ in never]: never

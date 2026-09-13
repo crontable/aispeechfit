@@ -32,7 +32,8 @@ test('shared request budgets are atomic, survive runtime replacement and preserv
     db = new Pool({ connectionString: url.href, max: 1 });
     shutdowns.push(trackPoolShutdown(db));
     for (const file of ['20260913000000_create_better_auth.sql', '20260913003000_auth_runtime_roles.sql',
-      '20260913030000_edge_request_limits.sql', '20260913030000_edge_request_limits.sql']) {
+      '20260913030000_edge_request_limits.sql', '20260913030000_edge_request_limits.sql',
+      '20260913050000_rename_provider_account_id.sql']) {
       await db.query(readFileSync('supabase/migrations/' + file, 'utf8'));
     }
     const { privateKey } = generateKeyPairSync('ec', { namedCurve: 'P-256' });

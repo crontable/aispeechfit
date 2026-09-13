@@ -3,6 +3,7 @@ import { randomUUID } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { test } from "node:test";
 import { Pool } from "pg";
+import { trackPoolShutdown } from "../edge-auth/pool-cleanup.ts";
 import { createKakaoAuth } from "../../lib/auth/kakao.ts";
 import { getLocalAuthConfig } from "../../lib/auth/local-config.ts";
 import { TEST_ORIGIN } from "../../lib/kakao-test/config.ts";
@@ -22,6 +23,7 @@ test("실제 Better Auth·PostgreSQL과 가상 카카오 응답으로 인증 경
   });
   const database = `kakao_fresh_${randomUUID().replaceAll("-", "")}`;
   const admin = new Pool({ connectionString: config.databaseUrl, max: 1 });
+  const closeAdmin = trackPoolShutdown(admin);
   await admin.query(`CREATE DATABASE ${database}`);
   const url = new URL(config.databaseUrl);
   url.pathname = `/${database}`;
@@ -30,6 +32,7 @@ test("실제 Better Auth·PostgreSQL과 가상 카카오 응답으로 인증 경
     options: "-c search_path=better_auth,pg_catalog",
     max: 6,
   });
+  const closePool = trackPoolShutdown(pool);
   const originalFetch = globalThis.fetch;
   try {
     await pool.query(
@@ -38,6 +41,12 @@ test("실제 Better Auth·PostgreSQL과 가상 카카오 응답으로 인증 경
         "utf8",
       ),
     );
+    // Existing account in the pre-S3 schema must be reused after the rename.
+    const existingUser = randomUUID();
+    const existingAccount = randomUUID();
+    await pool.query("insert into better_auth.users(id,name,email,email_verified) values($1,'Fixture','fixture@example.com',true)", [existingUser]);
+    await pool.query("insert into better_auth.accounts(id,user_id,provider_id,account_id,updated_at) values($1,$2,'kakao','456',now())", [existingAccount, existingUser]);
+    await pool.query(readFileSync('supabase/migrations/20260913050000_rename_provider_account_id.sql', 'utf8'));
     const auth = createKakaoAuth(pool, config);
     const fixtureToken = "fixture-access-token-never-real";
     let remoteProfile = {
@@ -136,6 +145,9 @@ test("실제 Better Auth·PostgreSQL과 가상 카카오 응답으로 인증 경
       "OAuth 콜백으로 세션을 발급하고 제공자 토큰은 암호화해 저장한다",
       async () => {
         assert.match(session.user.id, /^[0-9a-f-]{36}$/);
+        assert.equal(session.user.id, existingUser);
+        const account = await pool.query('select id,provider_account_id from better_auth.accounts where user_id=$1', [existingUser]);
+        assert.deepEqual(account.rows, [{ id: existingAccount, provider_account_id: '456' }]);
         const { rows } = await pool.query(
           "SELECT access_token FROM better_auth.accounts WHERE user_id=$1",
           [session.user.id],
@@ -378,8 +390,9 @@ test("실제 Better Auth·PostgreSQL과 가상 카카오 응답으로 인증 경
     );
   } finally {
     globalThis.fetch = originalFetch;
-    await pool.end();
-    await admin.query(`DROP DATABASE ${database} WITH (FORCE)`);
-    await admin.end();
+    try {
+      await closePool();
+      await admin.query(`DROP DATABASE ${database}`);
+    } finally { await closeAdmin(); }
   }
 });

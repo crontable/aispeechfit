@@ -50,7 +50,7 @@ export async function verifyCurrentKakaoSession(
       session.user.id,
     ]);
     const { rows: accounts } = await db.query(
-      "SELECT id, account_id FROM better_auth.accounts WHERE user_id = $1 AND provider_id = $2",
+      "SELECT id, provider_account_id FROM better_auth.accounts WHERE user_id = $1 AND provider_id = $2",
       [session.user.id, "kakao"],
     );
     if (accounts.length !== 1)
@@ -80,7 +80,7 @@ export async function verifyCurrentKakaoSession(
       const profile = await get("/v2/user/me");
       phone = verifyKakaoProfile(tokenInfo, profile, {
         appId: deps.appId,
-        subject: account.account_id,
+        subject: account.provider_account_id,
       });
     } catch (error) {
       errorCode =
@@ -114,7 +114,7 @@ export async function verifyCurrentKakaoSession(
       [
         session.user.id,
         deps.appId,
-        account.account_id,
+        account.provider_account_id,
         phone,
         status,
         account.id,
