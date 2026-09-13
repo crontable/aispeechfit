@@ -27,7 +27,8 @@
     "test:auth-migration": "node --env-file=.env.local --test tests/auth-migration/*.test.mjs",
     "test:auth-schema": "node --env-file=.env.local --test tests/auth-schema/*.test.ts",
     "auth-schema:evidence": "node --env-file=.env.local scripts/auth-schema/evidence.mjs",
-    "auth-schema:apply": "node --env-file=.env.local scripts/auth-schema/apply.mjs"
+    "auth-schema:apply": "node --env-file=.env.local scripts/auth-schema/apply.mjs",
+    "test:service-auth": "node --env-file=.env.local --test tests/service-auth/*.test.ts"
   },
   "dependencies": {
     "@emotion/react": "^11.14.0",
