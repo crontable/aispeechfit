@@ -35,7 +35,7 @@ export default defineConfig([
     },
   },
   {
-    files: ['lib/kakao-test/**/*.ts', 'lib/auth/**/*.ts', 'scripts/kakao-test/**/*.mjs', 'scripts/auth-schema/**/*.mjs', 'tests/kakao-test/**/*.ts', 'tests/auth-schema/**/*.ts', 'tests/service-auth/**/*.ts'],
+    files: ['lib/kakao-test/**/*.ts', 'lib/auth/**/*.ts', 'scripts/kakao-test/**/*.mjs', 'scripts/auth-schema/**/*.mjs', 'scripts/netlify/**/*.mjs', 'tests/kakao-test/**/*.ts', 'tests/auth-schema/**/*.ts', 'tests/service-auth/**/*.ts'],
     // Node 24의 내장 TypeScript 실행기는 상대 import의 확장자를 요구한다.
     rules: { 'import/extensions': ['error', 'ignorePackages', { ts: 'always' }] },
   },

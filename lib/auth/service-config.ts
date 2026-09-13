@@ -2,9 +2,8 @@ import { getLocalAuthConfig } from './local-config.ts';
 export function getServiceAuthConfig(env = process.env) {
   const remoteTest=env.NODE_ENV==='development' && env.KAKAO_REMOTE_AUTH_TEST_ENABLED==='true';
   if (!remoteTest && env.NODE_ENV !== 'production' && env.KAKAO_AUTH_TEST_ENABLED === 'true') return getLocalAuthConfig(env);
-  for (const key of ['AUTH_DATABASE_URL', 'AUTH_PHONE_DATABASE_URL', 'BETTER_AUTH_URL', 'BETTER_AUTH_SECRET', 'KAKAO_CLIENT_ID', 'KAKAO_CLIENT_SECRET', 'KAKAO_APP_ID']) {
-    if (!env[key]?.trim()) throw new Error('Authentication configuration incomplete');
-  }
+  const missing=['AUTH_DATABASE_URL', 'AUTH_PHONE_DATABASE_URL', 'BETTER_AUTH_URL', 'BETTER_AUTH_SECRET', 'KAKAO_CLIENT_ID', 'KAKAO_CLIENT_SECRET', 'KAKAO_APP_ID'].filter(key=>!env[key]?.trim());
+  if (missing.length) throw new Error('Authentication configuration incomplete: '+missing.join(', '));
   const origin = new URL(env.BETTER_AUTH_URL!);
   const database = new URL(env.AUTH_DATABASE_URL!);
   if ((origin.protocol !== 'https:' && !(remoteTest && origin.origin==='http://localhost:3000')) || origin.pathname !== '/' || origin.search || origin.hash || origin.username || origin.password

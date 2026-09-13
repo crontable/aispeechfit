@@ -1,12 +1,12 @@
 import 'server-only';
 import { Pool } from 'pg';
-import { readFileSync } from 'node:fs';
+import { SUPABASE_CA } from './supabase-ca.ts';
 import { createKakaoAuth } from './kakao.ts';
 import { getServiceAuthConfig } from './service-config.ts';
 import { getLocalAuthRuntime } from './local-server.ts';
 function createRuntime() {
   const config = getServiceAuthConfig();
-  const ssl={rejectUnauthorized:true,ca:readFileSync(process.cwd()+'/scripts/auth-migration/certs/prod-ca-2021.crt','utf8')};
+  const ssl={rejectUnauthorized:true,ca:SUPABASE_CA};
   const authPool = new Pool({ connectionString: config.databaseUrl,
     ssl,
     max: 6, connectionTimeoutMillis: 5000 });

@@ -1,5 +1,7 @@
 # 배포 구조와 서버 개념
 
+> 아래 내용은 Supabase Authentication을 사용하던 이전 구조의 기록이다. Better Auth 전환 후 운영 환경 파일 분리와 Netlify 적용 절차는 [현재 배포 설정 안내](./NETLIFY-ENV.md)를 따른다.
+
 이 문서는 aispeechfit이 어떤 부품으로 이루어져 있고, 사용자의 요청이 어느 길을 지나 답을 받는지 적는다. 그 길에 나오는 서버 개념(프록시, 리버스 프록시, CDN, 엣지, 서버리스 함수)도 이 앱을 예로 풀어 적는다. 프로덕트 동작에 영향을 주는 설정은 없고, 읽어서 구조를 익히는 문서다. 데이터 접근 범위는 [SECURITY.md](./SECURITY.md)가, DB 변경 절차는 [DB-OPERATIONS.md](./DB-OPERATIONS.md)가 다룬다.
 
 ## 1. 한 장으로 보는 구성

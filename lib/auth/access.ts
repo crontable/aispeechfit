@@ -4,9 +4,11 @@ import { redirect } from 'next/navigation';
 import { getAuthRuntime } from './server.ts';
 import { readKakaoStatus } from './kakao-verification.ts';
 import { createSessionDataClient } from '../data/client.ts';
+import { hasSessionCookie } from './session-cookie.ts';
 
 export async function getSessionAccess() {
   const requestHeaders = await headers();
+  if (!hasSessionCookie(requestHeaders)) return null;
   const runtime = getAuthRuntime();
   const session = await runtime.auth.api.getSession({ headers: requestHeaders });
   if (!session) return null;
