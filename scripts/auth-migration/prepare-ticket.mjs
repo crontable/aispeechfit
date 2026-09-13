@@ -25,7 +25,9 @@ try {
   if (users.rowCount !== 1) throw new Error('SOURCE_USER_NOT_UNIQUE');
   const tickets = await source.query(`SELECT id::text, row_to_json(t)::text AS payload,
     (is_active AND started_at <= now() AND expires_at >= now()) AS active
-    FROM public.tickets t WHERE user_id = $1 ORDER BY id`, [users.rows[0].id]);
+    FROM public.tickets t WHERE user_id = $1
+      AND is_active AND started_at <= now() AND expires_at >= now()
+    ORDER BY id`, [users.rows[0].id]);
   if (tickets.rowCount !== 1) throw new Error('SOURCE_TICKET_NOT_UNIQUE');
   if (!tickets.rows[0].active) throw new Error('SOURCE_TICKET_NOT_ACTIVE');
   const ticket = tickets.rows[0];
