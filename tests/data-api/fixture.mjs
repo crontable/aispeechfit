@@ -10,7 +10,6 @@ import { trackPoolShutdown } from '../edge-auth/pool-cleanup.ts';
 const execute = promisify(execFile);
 const pause = ms => new Promise(resolve => setTimeout(resolve, ms));
 const label = 'aispeechfit.issue32.data-api';
-const images = { database: 'postgres:17-alpine', rest: 'public.ecr.aws/supabase/postgrest:v14.13' };
 
 async function docker(args, extraEnv = {}) {
   try {
@@ -35,7 +34,9 @@ async function boundPort(id, port) {
 }
 
 // 운영 URL·쿠키·기존 키를 입력받지 않는다. 모든 DB·역할·키·자료는 이 검사에서 만든다.
-export async function startDataApiFixture() {
+export async function startDataApiFixture({ databaseImage = 'postgres:17-alpine' } = {}) {
+  assert.ok(['postgres:17-alpine', 'postgres:15.8-alpine'].includes(databaseImage));
+  const images = { database: databaseImage, rest: 'public.ecr.aws/supabase/postgrest:v14.13' };
   const suffix = randomUUID().replaceAll('-', '');
   const network = 'aispeechfit-api-' + suffix;
   const containers = [];
