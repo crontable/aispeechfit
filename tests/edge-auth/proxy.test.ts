@@ -5,7 +5,7 @@ import { getServiceConfig } from '../../lib/service/config.ts';
 
 const config = { origin: 'https://fixture.example', functionUrl: 'https://project.supabase.co/functions/v1/service-auth-v1' };
 
-test('proxy forwards only service cookies and preserves OAuth redirects and cookie deletion', async () => {
+test('proxy completes OAuth with 303 without code/state in the destination and preserves cookie deletion', async () => {
   let upstream: Request | undefined;
   const fakeFetch: typeof fetch = async (input, init) => {
     upstream = new Request(input, init);
@@ -22,7 +22,7 @@ test('proxy forwards only service cookies and preserves OAuth redirects and cook
   assert.equal(upstream!.headers.get('cookie'), '__Secure-aispeechfit-better-auth.state=signed');
   for (const name of ['authorization', 'x-forwarded-host', 'x-forwarded-for']) assert.equal(upstream!.headers.get(name), null);
   assert.equal(upstream!.redirect, 'manual');
-  assert.equal(response.status, 302);
+  assert.equal(response.status, 303);
   assert.equal(response.headers.get('location'), config.origin + '/auth/complete');
   assert.equal(response.headers.getSetCookie().length, 2);
   assert.match(response.headers.getSetCookie()[1], /Max-Age=0/);

@@ -27,7 +27,13 @@ export async function forwardServiceRequest(request: Request, fetchService = fet
       body: request.method === 'POST' ? await readLimitedBody(request) : undefined,
       redirect: 'manual', cache: 'no-store', signal: AbortSignal.timeout(20000),
     });
-    return copyServiceResponse(response);
+    const forwarded = copyServiceResponse(response);
+    // Netlify carries query parameters across 302 redirects. Keep OAuth code/state
+    // on the callback endpoint by completing the exchange with an explicit 303.
+    if (url.pathname === '/api/auth/callback/kakao' && forwarded.status === 302) {
+      return new Response(forwarded.body, { status: 303, headers: forwarded.headers });
+    }
+    return forwarded;
   } catch (error) {
     if (error instanceof Error && error.message === 'BODY_TOO_LARGE') return serviceJson({ error: 'body_too_large' }, 413);
     return serviceJson({ error: 'service_unavailable' }, 503);
