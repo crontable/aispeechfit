@@ -2,11 +2,10 @@ import { isKakaoTestEnabled, TEST_ORIGIN } from "../kakao-test/config.ts";
 
 export function missingLocalAuthSettings(env = process.env) {
   return [
+    "AUTH_MIGRATION_DATABASE_URL",
     "BETTER_AUTH_SECRET",
     "KAKAO_CLIENT_ID",
     "KAKAO_CLIENT_SECRET",
-    "KAKAO_APP_ID",
-    "AUTH_MIGRATION_DATABASE_URL",
   ].filter((key) => !env[key]?.trim());
 }
 
@@ -15,7 +14,7 @@ export function getLocalAuthConfig(env = process.env) {
     throw new Error("Local auth verification disabled");
   if (missingLocalAuthSettings(env).length)
     throw new Error("Local auth settings incomplete");
-  if (env.BETTER_AUTH_SECRET!.length < 32 || !/^\d+$/.test(env.KAKAO_APP_ID!))
+  if (env.BETTER_AUTH_SECRET!.length < 32)
     throw new Error("Invalid auth settings");
   const url = new URL(env.AUTH_MIGRATION_DATABASE_URL!);
   if (
@@ -34,6 +33,5 @@ export function getLocalAuthConfig(env = process.env) {
     secret: env.BETTER_AUTH_SECRET!,
     clientId: env.KAKAO_CLIENT_ID!,
     clientSecret: env.KAKAO_CLIENT_SECRET!,
-    appId: env.KAKAO_APP_ID!,
   };
 }

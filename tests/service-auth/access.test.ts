@@ -203,12 +203,76 @@ test('existing data upgrades to phone-free session and own-ticket access', async
         assert.deepEqual(await read(), allowed);
         assert.deepEqual(await snapshot(), before);
       });
+      const retirement = sql('supabase/operations/retire-phone-access.sql');
+      const retirementBefore = await snapshot();
+      const authPolicies = async () => (await db.query("select * from pg_policies where schemaname='better_auth' order by tablename,policyname")).rows;
+      const policiesBefore = await authPolicies();
+      const expectRetirementFailure = async (error: RegExp | { code: string }) => {
+        await assert.rejects(db.query(retirement), error);
+        await db.query('rollback');
+        assert.deepEqual(await snapshot(), retirementBefore);
+        assert.deepEqual(await authPolicies(), policiesBefore);
+      };
+      await t.test('7번 권한 정리는 적용 준비 표시와 새 계정 열이 있어야 실행된다', async () => {
+        assert.ok(createdRoles.includes('better_auth_phone_writer'), '이 검사가 만든 역할만 제거한다.');
+        await expectRetirementFailure(/ISSUE32_PHONE_RETIREMENT_NOT_READY/);
+        await db.query("set aispeechfit.phone_retirement_ready = 'on'");
+        await db.query(renameRollback);
+        await expectRetirementFailure(/ISSUE32_PHONE_FREE_SCHEMA_REQUIRED/);
+        await db.query(renameMigration);
+      });
+      await t.test('변경된 전화번호 정책과 예상 밖 역할 권한은 전체 회수를 중단한다', async () => {
+        await db.query('alter policy phone_reader on better_auth.users using(false)');
+        await assert.rejects(db.query(retirement), /ISSUE32_PHONE_POLICY_STATE_CONFLICT/);
+        await db.query('rollback');
+        await db.query('alter policy phone_reader on better_auth.users using(true)');
+        await db.query('create view public.unexpected_phone_dependency as select 1 as id; grant select on public.unexpected_phone_dependency to better_auth_phone_writer');
+        await expectRetirementFailure({ code: '2BP01' });
+        await db.query('drop view public.unexpected_phone_dependency');
+        await db.query('grant update on better_auth.kakao_identities to better_auth_runtime');
+        await assert.rejects(db.query(retirement), /ISSUE32_UNEXPECTED_PHONE_READ_ACCESS/);
+        await db.query('rollback');
+        assert.equal((await db.query("select has_table_privilege('better_auth_runtime','better_auth.kakao_identities','SELECT') value")).rows[0].value, true);
+        await db.query('revoke update on better_auth.kakao_identities from better_auth_runtime');
+      });
+      await t.test('실행 중인 전화번호 전용 연결이 있으면 회수하지 않는다', async () => {
+        await db.query("alter role better_auth_phone_writer login password 'synthetic-retirement-connection'");
+        const writerUrl = new URL(url); writerUrl.username = 'better_auth_phone_writer'; writerUrl.password = 'synthetic-retirement-connection';
+        const writer = new Pool({ connectionString: writerUrl.href, max: 1 });
+        const closeWriter = trackPoolShutdown(writer);
+        try {
+          await writer.query('select 1');
+          await expectRetirementFailure(/ISSUE32_PHONE_CONNECTIONS_REMAIN/);
+        } finally { await closeWriter(); }
+        await db.query('alter role better_auth_phone_writer nologin password null');
+      });
+      await t.test('전화번호 권한만 회수하고 식별 관계·전체 행·일반 인증과 학습 접근을 보존한다', async () => {
+        await db.query(retirement);
+        const after = await snapshot();
+        const { security: beforeSecurity, ...beforeData } = retirementBefore;
+        const { security: afterSecurity, ...afterData } = after;
+        assert.deepEqual(afterData, beforeData);
+        const retainedSecurity = (rows: unknown) => (rows as { relname: string }[]).filter(row => !['users','accounts','sessions','kakao_identities','kakao_session_checks'].includes(row.relname));
+        assert.deepEqual(retainedSecurity(afterSecurity), retainedSecurity(beforeSecurity));
+        assert.equal((await db.query("select to_regrole('better_auth_phone_writer') value")).rows[0].value, null);
+        assert.deepEqual(await read(), allowed);
+        await db.query('begin'); await db.query('set local role better_auth_runtime');
+        assert.equal((await db.query('select id from better_auth.users')).rowCount, 2);
+        await db.query("update better_auth.users set name='Synthetic runtime update' where id=$1", [user]);
+        await assert.rejects(db.query('select * from better_auth.kakao_identities'), { code: '42501' });
+        await db.query('rollback');
+        assert.deepEqual(await snapshot(), after);
+        const afterPolicies = await authPolicies();
+        await db.query(retirement);
+        assert.deepEqual(await snapshot(), after);
+        assert.deepEqual(await authPolicies(), afterPolicies);
+      });
     } finally { await db.query('rollback'); db.release(); }
   } finally {
     try {
       await closePool?.();
       await admin.query(`drop database if exists ${database}`);
-      for (const role of createdRoles.reverse()) await admin.query(`drop role ${role}`);
+      for (const role of createdRoles.reverse()) await admin.query(`drop role if exists ${role}`);
     } finally { await closeAdmin(); }
   }
 });

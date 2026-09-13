@@ -42,7 +42,7 @@ test('phone-free runtime authentication and shared budgets preserve role boundar
     await db.query('revoke all on better_auth.kakao_identities, better_auth.kakao_session_checks from better_auth_runtime');
     const { privateKey } = generateKeyPairSync('ec', { namedCurve: 'P-256' });
     const env = { EDGE_LOCAL_TEST: 'true', AUTH_DATABASE_URL: url.href,
-      BETTER_AUTH_SECRET: 'synthetic-edge-test-secret-32-characters', KAKAO_CLIENT_ID: 'fixture', KAKAO_CLIENT_SECRET: 'fixture', KAKAO_APP_ID: '1',
+      BETTER_AUTH_SECRET: 'synthetic-edge-test-secret-32-characters', KAKAO_CLIENT_ID: 'fixture', KAKAO_CLIENT_SECRET: 'fixture',
       DATA_API_SIGNING_JWK: JSON.stringify({ ...privateKey.export({ format: 'jwk' }), kid: 'fixture' }),
       DATA_API_URL: 'http://localhost:54321', DATA_API_PUBLIC_KEY: 'sb_publishable_fixture' };
     const makeRuntime = () => {

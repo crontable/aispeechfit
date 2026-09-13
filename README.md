@@ -1,3 +1,11 @@
+# AI 스피치핏
+
+현재 인증은 카카오·Better Auth·Supabase Edge Functions를 사용한다. 이슈 #32의 전화번호 제거 구현은 실제 세션과 본인 이용권으로 학습을 허용한다. 적용 상태와 남은 검증은 [이슈 체크리스트](https://github.com/crontable/aispeechfit/issues/32)를 따른다.
+
+개발 환경은 [카카오 검사 안내](./docs/KAKAO-AUTH-TEST.md), 비밀정보 보관은 [환경 명세](./docs/NETLIFY-ENV.md), 운영 반영은 [Edge 배포 명세](./docs/EDGE-AUTH-ROLLOUT.md), 기존 계정·이용권·자료 보존은 [운영 정리 명세](./docs/PHONE-REMOVAL-OPERATIONS.md)를 참고한다. 기본 `/api/auth`는 Edge 프록시이며 개발 플래그만으로 로컬 DB에 연결되지 않는다.
+
+아래는 프로젝트의 원본 스타터 템플릿 안내다. Supabase Auth·Google·Vercel 예제 설정은 현행 서비스의 로그인·배포 절차가 아니다.
+
 <a href="https://demo-nextjs-with-supabase.vercel.app/">
   <img alt="Next.js and Supabase Starter Kit - the fastest way to build apps with Next.js and Supabase" src="https://demo-nextjs-with-supabase.vercel.app/opengraph-image.png">
   <h1 align="center">Next.js and Supabase Starter Kit</h1>

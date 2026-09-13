@@ -2,8 +2,7 @@
   "imports": {
     "better-auth": "npm:better-auth@1.7.4",
     "pg": "npm:pg@8.23.0",
-    "@supabase/supabase-js": "npm:@supabase/supabase-js@2.116.0",
-    "libphonenumber-js/max": "npm:libphonenumber-js@1.13.13/max"
+    "@supabase/supabase-js": "npm:@supabase/supabase-js@2.116.0"
   },
   "compilerOptions": { "strict": true }
 }

@@ -1,6 +1,8 @@
 # 배포 구조와 서버 개념
 
-> 아래 내용은 Supabase Authentication을 사용하던 이전 구조의 기록이다. Better Auth 전환 후 운영 환경 파일 분리와 Netlify 적용 절차는 [현재 배포 설정 안내](./NETLIFY-ENV.md)를 따른다.
+이슈 #32의 현재 요청 흐름은 브라우저 → Next.js 고정 경로 프록시 → Supabase Edge Function → Better Auth DB와 Data API다. 카카오 로그인 뒤 실제 세션·본인 이용권으로 학습을 허용하며 전화번호 확인을 요구하지 않는다. `/dev/kakao`의 개발 플래그는 이 경로를 로컬 DB로 전환하지 않는다. 현재 설정과 운영 적용 절차는 [환경 명세](./NETLIFY-ENV.md), [Edge 배포 명세](./EDGE-AUTH-ROLLOUT.md)를 따른다.
+
+> 아래 구성도와 Google·Supabase Auth 흐름은 전환 전 구조와 서버 개념을 설명하는 과거 기록이다. 현행 설정·실행 절차로 적용하지 않는다.
 
 이 문서는 aispeechfit이 어떤 부품으로 이루어져 있고, 사용자의 요청이 어느 길을 지나 답을 받는지 적는다. 그 길에 나오는 서버 개념(프록시, 리버스 프록시, CDN, 엣지, 서버리스 함수)도 이 앱을 예로 풀어 적는다. 프로덕트 동작에 영향을 주는 설정은 없고, 읽어서 구조를 익히는 문서다. 데이터 접근 범위는 [SECURITY.md](./SECURITY.md)가, DB 변경 절차는 [DB-OPERATIONS.md](./DB-OPERATIONS.md)가 다룬다.
 
