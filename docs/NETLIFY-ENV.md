@@ -1,32 +1,23 @@
-# 로컬 설정과 Netlify 운영 설정
+# 운영·로컬 환경 설정
 
-Better Auth는 Netlify Functions에서 실행되며 Supabase PostgreSQL에 연결한다. 환경 파일은 아래 두 용도로 나눈다. 두 파일 모두 비밀 값이 있으므로 Git에서 제외한다.
+| 파일 | 용도 |
+| --- | --- |
+| `.env` | 운영 서버 설정. 호스팅 환경 변수 가져오기에 이 파일을 사용한다. |
+| `.env.local` | 로컬 관리 자격 증명과 개발용 덮어쓰기. 업로드하지 않는다. |
+| `.env.example` | 비밀 값 없는 운영 설정 템플릿 |
+| `.env.local.example` | 비밀 값 없는 로컬 설정 템플릿 |
 
-| 파일 | 용도 | 포함 항목 |
-| --- | --- | --- |
-| `.env.local` | 로컬 개발·DB 관리. Netlify에 업로드하지 않는다. | 개발 설정, 관리·마이그레이션 계정, 로컬 실행에 필요한 서비스 설정 |
-| `.env.remote` | Netlify Production 환경 변수 가져오기 전용 | 운영 서비스가 필요한 13개 설정만 포함 |
+두 실제 파일은 Git에서 제외한다. `.env`에는 운영 실행 계정과 인증 설정 13개가 있고, 관리자 `SUPABASE_MIGRATION_SOURCE_DATABASE_URL`과 로컬 테스트 DB 비밀번호는 `.env.local`에만 둔다. 운영 파일의 DB 연결 계정은 `better_auth_runtime`, `better_auth_phone_writer`이다.
 
-로컬 작업에도 서비스 계정이 필요하므로 일부 항목은 양쪽에 존재한다. 관리자 `SUPABASE_MIGRATION_SOURCE_DATABASE_URL`, 로컬 DB 비밀번호, 마이그레이션 설정은 운영 파일로 복사하지 않는다.
+Next.js 개발 서버는 `.env.local` 값을 `.env`보다 우선한다. Node 관리·검사 명령은 `--env-file=.env --env-file=.env.local` 순서로 두 파일을 읽는다. 로컬에서도 필요한 공통 운영 설정은 `.env`에서 읽으며, 로컬 URL과 테스트 플래그만 `.env.local`에서 덮어쓴다. 별도 환경 파일 생성 명령은 없다.
 
-## 운영 파일 생성
+## 운영 적용
 
-```sh
-pnpm env:remote
-```
+1. Netlify 프로젝트의 **Project configuration → Environment variables → Import from a .env file**에서 `.env`를 가져온다. 다른 호스팅으로 이전할 때도 같은 파일을 해당 호스팅의 환경 변수 가져오기에 사용한다.
+2. **Production**에 적용하고, 범위를 선택할 수 있으면 **Builds와 Functions**를 포함한다. 현재 빌드 검증과 실행 서버가 모두 설정을 사용한다.
+3. 기존 등록 항목에 관리자 연결이나 로컬 테스트 DB 설정이 있다면 제거한다. 파일 가져오기는 불필요한 기존 항목을 자동 삭제하지 않는다.
+4. 저장 후 다시 배포하고 첫 화면·카카오 로그인·이용권 조회를 확인한다.
 
-이 명령은 `.env.local`을 수정하지 않는다. 정해진 항목만 읽어 `.env.remote`을 생성하고, 운영 주소를 `https://aispeechfit.crontables.com`으로 지정한다. DB 계정이 각각 `better_auth_runtime`, `better_auth_phone_writer`인지 확인하며, 관리자 계정이 들어오면 생성을 중단한다. 비밀 값은 출력하지 않으며 생성 파일은 소유자만 읽고 쓸 수 있다.
+실제 파일을 Git이나 공개 정적 파일로 배포하지 않는다. 운영 도메인이 변경되면 `.env`의 `BETTER_AUTH_URL`과 카카오 개발자센터의 Redirect URI를 함께 수정한다. 현재 Redirect URI는 `https://aispeechfit.crontables.com/api/auth/callback/kakao`이다.
 
-운영 항목은 `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_KEY`, `AUTH_DATABASE_URL`, `AUTH_PHONE_DATABASE_URL`, `BETTER_AUTH_SECRET`, `BETTER_AUTH_URL`, `KAKAO_CLIENT_ID`, `KAKAO_CLIENT_SECRET`, `KAKAO_APP_ID`, `SUPABASE_DATA_SIGNING_JWK`, `BETTER_AUTH_DATA_API_READY`, `KAKAO_AUTH_TEST_ENABLED`, `KAKAO_REMOTE_AUTH_TEST_ENABLED`이다. 두 테스트 플래그는 항상 `false`로 내보낸다. Data API 준비 플래그는 원본의 검증 완료 상태를 유지한다.
-
-## Netlify 적용
-
-1. Netlify 프로젝트의 **Project configuration → Environment variables → Import from a .env file**에서 `.env.remote`을 가져온다. 파일을 사이트의 공개 파일이나 저장소에 올리지 않는다.
-2. **Production** 배포 환경에 적용한다. 범위를 선택할 수 있으면 **Builds와 Functions**를 포함한다. 현재 빌드 검증과 실행 서버가 모두 설정을 사용한다.
-3. 비밀 값 표시 기능을 사용할 수 있으면 DB URL, Better Auth secret, Kakao client secret, 서명 JWK에 **Contains secret values**를 지정한다.
-4. 기존 환경 변수에 관리자 `SUPABASE_MIGRATION_SOURCE_DATABASE_URL`이 등록돼 있다면 제거한다. 파일 가져오기는 기존의 불필요한 항목을 자동 삭제하지 않는다.
-5. 환경 변수를 저장한 뒤 Production 배포를 다시 실행한다. 새 배포에서 `/`가 `/sign-in`으로 이동하고, 실제 카카오 로그인과 이용권 조회까지 확인한다.
-
-카카오 앱의 운영 Redirect URI는 `https://aispeechfit.crontables.com/api/auth/callback/kakao`이다. 빌드 성공만으로 카카오 로그인이나 DB 연결 성공이 확인되지는 않는다.
-
-참고 문서: [Netlify 환경 변수 가져오기](https://docs.netlify.com/build/environment-variables/get-started/), [Functions 환경 변수](https://docs.netlify.com/build/functions/environment-variables/).
+DB 실행 계정 준비·전환 명령은 운영 설정을 `.env`에 저장한다. 관리용 연결 정보는 `.env.local`에서 읽는다. 기존 운영 DB 전환은 완료됐으므로 환경 파일 정리를 위해 DB 전환 명령을 다시 실행하지 않는다.

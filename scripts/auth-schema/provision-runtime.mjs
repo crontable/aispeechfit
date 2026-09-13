@@ -10,7 +10,7 @@ const client=new pg.Client({connectionString:source.href,ssl:{rejectUnauthorized
 try {
   await client.connect();
   await client.query(readFileSync('supabase/migrations/20260913003000_auth_runtime_roles.sql','utf8'));
-  let env=readFileSync('.env.local','utf8');
+  let env=readFileSync('.env','utf8');
   for (const [role,key] of [['better_auth_runtime','AUTH_DATABASE_URL'],['better_auth_phone_writer','AUTH_PHONE_DATABASE_URL']]) {
     const saved=process.env[key];
     const password=saved ? decodeURIComponent(new URL(saved).password) : randomBytes(36).toString('hex');
@@ -20,7 +20,7 @@ try {
     const line=`${key}=${url.href}`;
     const regex=new RegExp(`^${key}=.*$`,'m');
     env=regex.test(env)?env.replace(regex,line):env.trimEnd()+'\n'+line+'\n';
-    writeFileSync('.env.local',env,{mode:0o600});
+    writeFileSync('.env',env,{mode:0o600});
     // Identifiers are fixed above; the generated hexadecimal literal cannot contain SQL syntax.
     await client.query(`alter role ${role} login password '${password}'`);
     const probe=new pg.Client({connectionString:url.href,ssl:{rejectUnauthorized:true,ca},connectionTimeoutMillis:10000});

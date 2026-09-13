@@ -3,7 +3,7 @@ import { appendFileSync, chmodSync, existsSync, readFileSync } from 'node:fs';
 import { parseEnv } from 'node:util';
 
 const path = '.env.local';
-const existing = existsSync(path) ? parseEnv(readFileSync(path, 'utf8')) : {};
+const existing = { ...(existsSync('.env') ? parseEnv(readFileSync('.env', 'utf8')) : {}), ...(existsSync(path) ? parseEnv(readFileSync(path, 'utf8')) : {}) };
 const password = existing.KAKAO_TEST_DB_PASSWORD || randomBytes(32).toString('hex');
 const defaults = {
   KAKAO_AUTH_TEST_ENABLED: 'true',
