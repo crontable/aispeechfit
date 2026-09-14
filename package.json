@@ -38,7 +38,8 @@
     "auth-schema:runtime": "node scripts/auth-schema/provision-runtime.mjs",
     "auth-schema:preflight": "node scripts/auth-schema/cutover.mjs",
     "auth-schema:cutover": "node scripts/auth-schema/cutover.mjs --apply",
-    "test:service-auth": "node --env-file=.env --env-file=.env.local --test --test-concurrency=1 tests/service-auth/*.test.ts"
+    "test:service-auth": "node --env-file=.env --env-file=.env.local --test --test-concurrency=1 tests/service-auth/*.test.ts",
+    "db:backup": "node --env-file=.env --env-file=.env.local scripts/db-backup/backup.mjs"
   },
   "dependencies": {
     "@emotion/react": "^11.14.0",
